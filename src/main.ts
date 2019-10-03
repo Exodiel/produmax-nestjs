@@ -5,6 +5,9 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import * as helmet from 'helmet';
 import * as rateLimit from 'express-rate-limit';
+import { Logger } from '@nestjs/common';
+
+const port = process.env.PORT_SERVER || 4000;
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -23,6 +26,7 @@ async function bootstrap() {
       index: false,
     },
   );
-  await app.listen(4000);
+  await app.listen(port);
+  Logger.log(`Server running on http://localhost:${port}`, 'Bootstrap');
 }
 bootstrap();
