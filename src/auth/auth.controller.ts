@@ -1,0 +1,28 @@
+import { UserR } from '../user/user.dto';
+import { UserRO } from '../user/user.dto';
+import { AuthService } from './auth.service';
+import { Controller, Post, Body, Res, HttpStatus, Get, Req } from '@nestjs/common';
+import { Response, Request } from 'express';
+
+@Controller('auth')
+export class AuthController {
+    constructor(private readonly authService: AuthService) {}
+
+    @Post('/login')
+    async login(@Res() res: Response, @Body() body: UserRO) {
+        const token = await this.authService.login(body);
+        return res.status(HttpStatus.OK).json(token);
+    }
+
+    @Post('/register')
+    async register(@Res() res: Response, @Body() userR: UserR) {
+        const user = await this.authService.register(userR);
+        return res.status(HttpStatus.OK).json(user);
+    }
+
+    @Get('/logout')
+    async logout(@Res() res: Response, @Req() req: Request) {
+        req.logout();
+        return res.status(HttpStatus.ACCEPTED).json({ message: 'Cerraste sesión' });
+    }
+}
