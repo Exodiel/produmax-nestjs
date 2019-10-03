@@ -43,7 +43,7 @@ export class ProductService {
     }
 
     async createProduct(productDTO: ProductDTO, imagePath: string): Promise<Product> {
-        const { name, details, stock, unitPrice, comboPrice, unitId, categoryId} = productDTO;
+        const { name, detail, stock, unitPrice, comboPrice, unitId, categoryId} = productDTO;
         const unit = await this.unitRepository.findOne({ where: { id: unitId } });
         if (!unit) {
             throw new NotFoundException('No se encontró la unidad');
@@ -52,7 +52,7 @@ export class ProductService {
         if (!category) {
             throw new NotFoundException('No se encontró la categoría');
         }
-        const product = this.productRepository.create({ name, details, stock, unitPrice, comboPrice, imagePath, unit, category });
+        const product = this.productRepository.create({ name, detail, stock, unitPrice, comboPrice, imagePath, unit, category });
         await this.productRepository.save(product);
         const lastProduct = await this.getLastProduct();
         this.gateway.wss.emit('newProduct', lastProduct);
@@ -85,7 +85,7 @@ export class ProductService {
             throw new HttpException('No se encontró el producto', HttpStatus.NOT_FOUND);
         }
         const existPath = resolve(product.imagePath);
-        const { unitId, categoryId, name, details, stock, unitPrice, comboPrice } = productDTO;
+        const { unitId, categoryId, name, detail, stock, unitPrice, comboPrice } = productDTO;
         const unit = await this.unitRepository.findOne({ where: { id: unitId } });
         if (!unit) {
             throw new NotFoundException('No se encontró la unidad');
@@ -99,7 +99,7 @@ export class ProductService {
         }
         await this.productRepository.update({id: productId}, {
             name,
-            details,
+            detail,
             stock,
             unitPrice,
             imagePath: !imagePath ? product.imagePath : imagePath,

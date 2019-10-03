@@ -2,7 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'ty
 import { Unit } from '../unit/unit.entity';
 import { Category } from '../category/category.entity';
 import { IsString, Length, IsInt } from 'class-validator';
-import { ProductToOrder } from '../order/productToOrder.entity';
+import { Details } from '../order/details.entity';
 
 @Entity('product')
 export class Product {
@@ -22,7 +22,7 @@ export class Product {
         length: 180,
     })
     @IsString()
-    details: string;
+    detail: string;
 
     @Column({
         type: 'smallint',
@@ -58,6 +58,6 @@ export class Product {
     @ManyToOne(type => Category, category => category.product)
     category: Category;
 
-    @OneToMany((type) => ProductToOrder, (productToOrder) => productToOrder.product)
-    productToOrders!: ProductToOrder[];
+    @OneToMany(type => Details, (details) => details.product)
+    details: Details[];
 }

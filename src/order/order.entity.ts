@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, BeforeInsert } from 'typeorm';
 import { IsString, Length } from 'class-validator';
-import { ProductToOrder } from './productToOrder.entity';
+import { Details } from './details.entity';
 import { User } from '../user/user.entity';
 
 @Entity('order')
@@ -55,7 +55,7 @@ export class Order {
     @ManyToOne(type => User, user => user.order)
     user: User;
 
-    @OneToMany((type) => ProductToOrder, (productToOrder) => productToOrder.order)
-    productToOrders!: ProductToOrder[];
+    @OneToMany(type => Details, (details) => details.order)
+    details: Details[];
 
 }

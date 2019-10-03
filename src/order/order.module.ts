@@ -1,4 +1,4 @@
-import { ProductToOrder } from './productToOrder.entity';
+import { Details } from './details.entity';
 import { Module, NestModule, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
 import { OrderController } from './order.controller';
 import { OrderService } from './order.service';
@@ -11,7 +11,7 @@ import { RolMiddleware } from '../middlewares/rol.middleware';
 import { AppGateway } from '../app.gateway';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Order, ProductToOrder, Product, User])],
+  imports: [TypeOrmModule.forFeature([Order, Details, Product, User])],
   controllers: [OrderController],
   providers: [OrderService, AppGateway],
 })

@@ -1,4 +1,4 @@
-import { ProductToOrder } from './productToOrder.entity';
+import { Details } from './details.entity';
 import { Product } from '../product/product.entity';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -85,17 +85,21 @@ export class OrderService {
                 .createQueryBuilder('product')
                 .where('product.id = :id', { id: el.productID })
                 .getOne();
-            const pto = new ProductToOrder();
-            pto.price = el.price;
-            pto.quantity = el.quantity;
-            pto.order = order;
-            pto.product = product;
-            await getRepository(ProductToOrder).save(pto);
+            const details = new Details();
+            details.price = el.price;
+            details.quantity = el.quantity;
+            details.order = order;
+            details.product = product;
+            await getRepository(Details).save(details);
         });
     }
 
     async deleteOrder(orderId: number): Promise<any> {
-        await getRepository(ProductToOrder).delete({ orderId });
+        const or = await getRepository(Order)
+            .createQueryBuilder('order')
+            .where('order.id = :id', { id: orderId })
+            .getOne();
+        await getRepository(Details).delete({ order: or });
         const order = this.orderRepository.delete({ id: orderId });
         return order;
     }

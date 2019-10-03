@@ -3,7 +3,7 @@ import { Unit } from '../unit/unit.entity';
 export class ProductRO {
     id: number;
     name: string;
-    details?: string;
+    detail?: string;
     stock: number;
     unitPrice: number;
     comboPrice?: number;
@@ -15,7 +15,7 @@ export class ProductRO {
 // tslint:disable-next-line: max-classes-per-file
 export class ProductDTO {
     name: string;
-    details?: string;
+    detail?: string;
     stock: number;
     unitPrice: number;
     comboPrice?: number;
