@@ -99,6 +99,9 @@ export class OrderService {
             .createQueryBuilder('order')
             .where('order.id = :id', { id: orderId })
             .getOne();
+        if (!or) {
+            throw new NotFoundException('No se encontró al orden');
+        }
         await getRepository(Details).delete({ order: or });
         const order = this.orderRepository.delete({ id: orderId });
         return order;
