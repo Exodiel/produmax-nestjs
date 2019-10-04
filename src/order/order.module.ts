@@ -18,13 +18,12 @@ import { AppGateway } from '../app.gateway';
 export class OrderModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(JwtMiddleware, RolMiddleware)
-      .exclude(
-        { path: 'order/', method: RequestMethod.GET },
-        { path: 'order/single', method: RequestMethod.GET },
-        { path: 'order/search-by-date', method: RequestMethod.GET },
-        { path: 'order/create', method: RequestMethod.POST },
-      )
+      .apply(JwtMiddleware)
       .forRoutes(OrderController);
+
+    consumer.apply(RolMiddleware)
+      .forRoutes(
+        { path: 'order/delete', method: RequestMethod.DELETE},
+      );
   }
 }
