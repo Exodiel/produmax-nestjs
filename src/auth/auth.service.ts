@@ -50,10 +50,31 @@ export class AuthService {
                 HttpStatus.NOT_FOUND,
             );
         }
+        const type = this.typeUser(rol.name) ;
         const payload = { email: user.email, id: user.id, rol: rol.name };
         return {
             access_token: this.jwtService.sign(payload),
+            type,
         };
+    }
+
+    typeUser(type: string): number {
+        let t: number;
+        switch (type) {
+            case 'admin':
+                t = 1;
+                break;
+            case 'client':
+                t = 2;
+                break;
+            case 'store':
+                t = 3;
+                break;
+            default:
+                t = 0;
+                break;
+        }
+        return t;
     }
 
     async register(userR: UserR) {
