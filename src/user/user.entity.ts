@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, BeforeInsert, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, BeforeInsert, OneToMany, ManyToOne } from 'typeorm';
 import { IsString, IsInt, Min, Length, IsEmail } from 'class-validator';
 import { Rol } from '../rol/rol.entity';
 import * as bcrypt from 'bcrypt';
@@ -59,8 +59,7 @@ export class User {
     })
     phone: string;
 
-    @OneToOne(type => Rol, rol => rol.user)
-    @JoinColumn()
+    @ManyToOne(type => Rol, rol => rol.users)
     rol: Rol;
 
     @OneToMany(type => Order, order => order.user)
