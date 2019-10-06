@@ -66,11 +66,11 @@ export class User {
     order: Order[];
 
     @BeforeInsert()
-    async hassPasword() {
+    async hashPasword() {
         this.password = await bcrypt.hash(this.password, 12);
     }
 
     async comparePassword(attempt: string): Promise<boolean> {
-        return await bcrypt.compare(attempt, this.password);
+        return bcrypt.compare(attempt, this.password);
     }
 }

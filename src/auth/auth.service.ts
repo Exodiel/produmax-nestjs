@@ -5,6 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../user/user.entity';
 import { Repository, getRepository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 import { Rol } from '../rol/rol.entity';
 import { AppGateway } from '../app.gateway';
 
@@ -31,10 +32,20 @@ export class AuthService {
 
     async login(userRO: UserRO) {
         const { email, password } = userRO;
-        const user = await this.userRepository.findOne({ where: { email } });
-        if (!user || !(await user.comparePassword(password))) {
+        const user = await getRepository(User)
+            .createQueryBuilder('user')
+            .where('user.email = :email', {email})
+            .getOne();
+        if (!user) {
             throw new HttpException(
                 'Usuario no es correcto',
+                HttpStatus.BAD_REQUEST,
+            );
+        }
+        const pass = await bcrypt.compare(password, user.password);
+        if (!pass) {
+            throw new HttpException(
+                'Contraseña incorrecta',
                 HttpStatus.BAD_REQUEST,
             );
         }

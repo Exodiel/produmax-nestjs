@@ -15,10 +15,11 @@ import { AppGateway } from '../app.gateway';
   providers: [UserService, RolService, AppGateway],
   exports: [UserModule],
 })
-export class UserModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(VerifyTokenMiddleware, VerifyRolMiddlware('admin'))
-      .forRoutes(UserController);
-  }
+// implements NestModule
+export class UserModule  {
+  // configure(consumer: MiddlewareConsumer) {
+  //   consumer
+  //     .apply(VerifyTokenMiddleware, VerifyRolMiddlware('admin'))
+  //     .forRoutes(UserController);
+  // }
 }
