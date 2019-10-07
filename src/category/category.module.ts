@@ -3,8 +3,8 @@ import { CategoryController } from './category.controller';
 import { CategoryService } from './category.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Category } from './category.entity';
-import { VerifyTokenMiddleware } from '../middlewares/verifytoken.middleware';
-import { VerifyRolMiddlware } from '../middlewares/verifyrol.middleware';
+import { JwtMiddleware } from '../middlewares/jwt.middlware';
+import { RolMiddleware } from '../middlewares/rol.middleware';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Category])],
@@ -15,7 +15,7 @@ import { VerifyRolMiddlware } from '../middlewares/verifyrol.middleware';
 export class CategoryModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(VerifyTokenMiddleware, VerifyRolMiddlware('admin'))
+      .apply(JwtMiddleware, RolMiddleware)
       .forRoutes(CategoryController);
   }
 }

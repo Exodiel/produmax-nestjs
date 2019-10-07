@@ -7,8 +7,8 @@ import { Category } from '../category/category.entity';
 import { Unit } from '../unit/unit.entity';
 import { CategoryService } from '../category/category.service';
 import { UnitService } from '../unit/unit.service';
-import { VerifyTokenMiddleware } from '../middlewares/verifytoken.middleware';
-import { VerifyRolMiddlware } from '../middlewares/verifyrol.middleware';
+import { JwtMiddleware } from '../middlewares/jwt.middlware';
+import { RolMiddleware } from '../middlewares/rol.middleware';
 import { AppGateway } from '../app.gateway';
 
 @Module({
@@ -20,7 +20,7 @@ import { AppGateway } from '../app.gateway';
 export class ProductModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(VerifyTokenMiddleware, VerifyRolMiddlware('admin'))
+      .apply(JwtMiddleware, RolMiddleware)
       .forRoutes(
         { path: 'products/create', method: RequestMethod.POST },
         { path: 'products/delete', method: RequestMethod.DELETE },
