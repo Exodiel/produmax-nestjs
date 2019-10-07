@@ -5,9 +5,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './user.entity';
 import { Rol } from '../rol/rol.entity';
 import { RolService } from '../rol/rol.service';
-import {VerifyRolMiddlware} from '../middlewares/verifyrol.middleware';
-import { VerifyTokenMiddleware } from '../middlewares/verifytoken.middleware';
+import { JwtMiddleware } from '../middlewares/jwt.middlware';
 import { AppGateway } from '../app.gateway';
+import { RolMiddleware } from '../middlewares/rol.middleware';
 
 @Module({
   imports: [TypeOrmModule.forFeature([User, Rol])],
@@ -15,11 +15,10 @@ import { AppGateway } from '../app.gateway';
   providers: [UserService, RolService, AppGateway],
   exports: [UserModule],
 })
-// implements NestModule
-export class UserModule  {
-  // configure(consumer: MiddlewareConsumer) {
-  //   consumer
-  //     .apply(VerifyTokenMiddleware, VerifyRolMiddlware('admin'))
-  //     .forRoutes(UserController);
-  // }
+export class UserModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(JwtMiddleware, RolMiddleware)
+      .forRoutes(UserController);
+  }
 }

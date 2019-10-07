@@ -6,15 +6,14 @@ import { Rol } from '../rol/rol.entity';
 @Injectable()
 export class RolMiddleware implements NestMiddleware {
     async use(req: Request, res: Response, next: NextFunction) {
-        const {id, rol} = res.locals.jwtPayload;
+        const { rol } = req.jwtPayload;
         try {
             const rolModel = await getRepository(Rol)
                 .createQueryBuilder('rols')
-                .leftJoinAndSelect('rols.user', 'user', 'user.id = :id', { id })
                 .where('rols.name = :name', { name: 'admin' })
                 .getOne();
             if (!rolModel) {
-                throw new NotFoundException('No se encontró el usuario');
+                throw new NotFoundException('No se encontró el rol');
             }
 
             if (rolModel.name === rol) {

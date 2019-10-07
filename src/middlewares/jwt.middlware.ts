@@ -2,7 +2,6 @@ import { Injectable, NestMiddleware, UnauthorizedException, HttpException, HttpS
 import { Request, Response, NextFunction } from 'express';
 import { jwtConstant } from '../auth/constant';
 import * as jwt from 'jsonwebtoken';
-
 @Injectable()
 export class JwtMiddleware implements NestMiddleware {
     async use(req: Request, res: Response, next: NextFunction) {
@@ -17,7 +16,8 @@ export class JwtMiddleware implements NestMiddleware {
         let jwtPayload: any;
         try {
             jwtPayload = await jwt.verify(token, jwtConstant.secret);
-            res.locals.jwtPayload = jwtPayload;
+            // req.jwtPayload = jwtPayload;
+            req.jwtPayload = jwtPayload;
         } catch (error) {
             throw new UnauthorizedException('No se encuentra autorizado');
         }
