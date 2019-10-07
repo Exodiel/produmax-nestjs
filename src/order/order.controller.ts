@@ -1,4 +1,4 @@
-import { Controller, Get, Res, HttpStatus, Query, Post, Body, Delete, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Res, HttpStatus, Query, Post, Body, Delete, UseGuards, Req, Put } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { OrderService } from './order.service';
 import { Response, Request } from 'express';
@@ -33,6 +33,15 @@ export class OrderController {
         return res.status(HttpStatus.CREATED).json({
             message: 'Orden creada',
             order,
+        });
+    }
+
+    @Put('/update-order')
+    async updateOrder(@Res() res: Response, @Req() req: Request, @Body() data) {
+        const { id, state } = data;
+        await this.orderService.updateStateOrder(id, state);
+        return res.status(HttpStatus.OK).json({
+            message: 'Orden actualizada',
         });
     }
 

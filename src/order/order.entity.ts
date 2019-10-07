@@ -41,6 +41,13 @@ export class Order {
     })
     date: string;
 
+    @Column({
+        type: 'varchar',
+        length: 50,
+    })
+    @IsString()
+    dateDelivery: string;
+
     @BeforeInsert()
     saveDate() {
         const date = new Date().toLocaleString();

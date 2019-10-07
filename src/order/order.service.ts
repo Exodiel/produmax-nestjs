@@ -3,7 +3,7 @@ import { Product } from '../product/product.entity';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Order } from './order.entity';
-import { Repository, getRepository } from 'typeorm';
+import { Repository, getRepository, getConnection } from 'typeorm';
 import { OrderDTO } from './order.dto';
 import { User } from '../user/user.entity';
 import { AppGateway } from '../app.gateway';
@@ -38,7 +38,7 @@ export class OrderService {
     }
 
     async createOrder(orderDTO: OrderDTO): Promise<any> {
-        const { address, neigh, total, userId, data } = orderDTO;
+        const { address, neigh, total, dateDelivery, userId, data } = orderDTO;
         const user = await getRepository(User)
             .createQueryBuilder('user')
             .where('user.id = :id', {id: userId})
@@ -46,7 +46,7 @@ export class OrderService {
         if (!user) {
             throw new NotFoundException('No se encontró al usuario');
         }
-        const order = await this.orderRepository.create({ address, neigh, total, user});
+        const order = await this.orderRepository.create({ address, neigh, total, dateDelivery, user});
         await this.orderRepository.save(order);
         await this.createDetail(data);
         const lastOrder = await this.searchLastOrder();
@@ -92,6 +92,24 @@ export class OrderService {
             details.product = product;
             await getRepository(Details).save(details);
         });
+    }
+
+    async updateStateOrder(orderID: number, newState: string) {
+        const order = await getRepository(Order)
+            .createQueryBuilder('order')
+            .where('order.id = :id', { id: orderID })
+            .getOne();
+
+        if (!order) {
+            throw new NotFoundException('No se encontró la orden');
+        }
+        await getConnection()
+            .createQueryBuilder()
+            .update(Order)
+            .set({ state: newState })
+            .where('id = :id', { id: orderID })
+            .execute();
+        this.gateway.wss.emit('updateOrder', 'Orden actualizada');
     }
 
     async deleteOrder(orderId: number): Promise<any> {
