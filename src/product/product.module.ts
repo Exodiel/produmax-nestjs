@@ -20,7 +20,11 @@ import { AppGateway } from '../app.gateway';
 export class ProductModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(JwtMiddleware, RolMiddleware)
+      .apply(JwtMiddleware)
+      .forRoutes(ProductController);
+
+    consumer
+      .apply(RolMiddleware)
       .forRoutes(
         { path: 'products/create', method: RequestMethod.POST },
         { path: 'products/delete', method: RequestMethod.DELETE },
