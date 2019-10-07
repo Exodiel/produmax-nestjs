@@ -1,9 +1,7 @@
-import { Controller, Get, Res, HttpStatus, Query, Post, Body, Delete, UseGuards, Req, Put } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { Controller, Get, Res, HttpStatus, Query, Post, Body, Delete, Req, Put } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { Response, Request } from 'express';
 import { OrderDTO } from './order.dto';
-import { RoleGuard } from '../guards/rol.guard';
 
 @Controller('order')
 export class OrderController {
