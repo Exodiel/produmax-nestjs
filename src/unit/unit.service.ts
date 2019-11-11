@@ -1,4 +1,4 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, NotFoundException } from '@nestjs/common';
 import { UnitDTO } from './unit.dto';
 import { Unit } from './unit.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -18,8 +18,11 @@ export class UnitService {
         return unit;
     }
 
-    async getUnitByName(name: string): Promise<Unit> {
-        const unit = await this.unitRepository.findOne({ name });
+    async getUnitByName(unitName: string): Promise<Unit> {
+        const unit = await this.unitRepository.findOne({ name: unitName});
+        if (!unit) {
+            throw new NotFoundException('No se encontró la unidad');
+        }
         return unit;
     }
 

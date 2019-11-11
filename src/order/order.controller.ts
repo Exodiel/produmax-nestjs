@@ -20,9 +20,33 @@ export class OrderController {
     }
 
     @Get('/search-by-date')
-    async getOrderByDate(@Res() res: Response, @Req() req: Request, @Query('date') date: Date) {
+    async getOrderByDate(@Res() res: Response, @Req() req: Request, @Query('date') date: string) {
         const order = await this.orderService.getOrderByDate(date);
         return res.status(HttpStatus.OK).json(order);
+    }
+
+    @Get('/counter')
+    async getOrderCount(@Res() res: Response) {
+        const count = await this.orderService.getCountOrders();
+        return res.status(HttpStatus.OK).json(count);
+    }
+
+    @Get('/counter-sell')
+    async getOrderCountSell(@Res() res: Response) {
+        const count = await this.orderService.getCountOrdersSell();
+        return res.status(HttpStatus.OK).json(count);
+    }
+
+    @Get('/counter-cancel')
+    async getOrderCountCancel(@Res() res: Response) {
+        const count = await this.orderService.getCountOrdersCancel();
+        return res.status(HttpStatus.OK).json(count);
+    }
+
+    @Get('/amount')
+    async getOrderAmount(@Res() res: Response) {
+        const amount = await this.orderService.getAmount();
+        return res.status(HttpStatus.OK).json(amount);
     }
 
     @Post('/create')
@@ -35,8 +59,8 @@ export class OrderController {
     }
 
     @Put('/update-order')
-    async updateOrder(@Res() res: Response, @Req() req: Request, @Body() data) {
-        const { id, state } = data;
+    async updateOrder(@Res() res: Response, @Req() req: Request, @Query('id') id: number, @Body() data) {
+        const { state } = data;
         await this.orderService.updateStateOrder(id, state);
         return res.status(HttpStatus.OK).json({
             message: 'Orden actualizada',

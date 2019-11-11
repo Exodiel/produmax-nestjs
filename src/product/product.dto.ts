@@ -1,15 +1,16 @@
-import { Category } from '../category/category.entity';
+
 import { Unit } from '../unit/unit.entity';
+import { SubCategory } from '../sub-category/sub.category.entity';
 export class ProductRO {
     id: number;
     name: string;
     detail?: string;
     stock: number;
     unitPrice: number;
-    comboPrice?: number;
+    weight: number;
     imagePath: string;
     unit: Unit;
-    category: Category;
+    subcategory: SubCategory;
 }
 
 // tslint:disable-next-line: max-classes-per-file
@@ -18,7 +19,8 @@ export class ProductDTO {
     detail?: string;
     stock: number;
     unitPrice: number;
-    comboPrice?: number;
+    weight: number;
+    imagePath: string;
     unitId: number;
-    categoryId: number;
+    subcategoryId: number;
 }

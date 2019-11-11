@@ -5,17 +5,18 @@ import { Injectable, HttpException, HttpStatus, NotFoundException } from '@nestj
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './product.entity';
 import { Repository, getRepository } from 'typeorm';
-import { Category } from '../category/category.entity';
+import { SubCategory } from '../sub-category/sub.category.entity';
 import { unlink } from 'fs-extra';
 import { resolve } from 'path';
+import { deletePhoto } from '../utils/file-uploading';
 
 @Injectable()
 export class ProductService {
     constructor(
         @InjectRepository(Product)
         private readonly productRepository: Repository<Product>,
-        @InjectRepository(Category)
-        private readonly categoryRepository: Repository<Category>,
+        @InjectRepository(SubCategory)
+        private readonly subcategoryRepository: Repository<SubCategory>,
         @InjectRepository(Unit)
         private readonly unitRepository: Repository<Unit>,
         private gateway: AppGateway,
@@ -37,26 +38,31 @@ export class ProductService {
             .where('products.name like :name', { name: '%' + productName + '%' })
             .getMany();
         if (!products) {
-            throw new NotFoundException('No se encontró la unidad');
+            throw new NotFoundException('No se encontraron coincidencias');
         }
         return products;
     }
 
-    async createProduct(productDTO: ProductDTO, imagePath: string): Promise<Product> {
-        const { name, detail, stock, unitPrice, comboPrice, unitId, categoryId} = productDTO;
-        const unit = await this.unitRepository.findOne({ where: { id: unitId } });
-        if (!unit) {
-            throw new NotFoundException('No se encontró la unidad');
-        }
-        const category = await this.categoryRepository.findOne({ where: { id: categoryId } });
-        if (!category) {
-            throw new NotFoundException('No se encontró la categoría');
-        }
-        const product = this.productRepository.create({ name, detail, stock, unitPrice, comboPrice, imagePath, unit, category });
+    async createProduct(productDTO: ProductDTO): Promise<Product> {
+        const { name, detail, stock, unitPrice, weight, unitId, subcategoryId, imagePath} = productDTO;
+        const unit = await this.getUnit(unitId);
+        const subcategory = await this.getSubCategory(subcategoryId);
+        const product = this.productRepository.create({ name, detail, stock, unitPrice, weight, imagePath, unit, subcategory });
         await this.productRepository.save(product);
         const lastProduct = await this.getLastProduct();
+        const counter = await this.getCountProducts();
         this.gateway.wss.emit('newProduct', lastProduct);
+        this.gateway.wss.emit('countProducts', counter);
         return lastProduct;
+    }
+
+    async getCountProducts() {
+        const count = await getRepository(Product)
+            .createQueryBuilder('product')
+            .select('COUNT(id) as counter')
+            .getRawOne();
+
+        return !count ? 0 : count;
     }
 
     async getLastProduct() {
@@ -73,43 +79,74 @@ export class ProductService {
         if (!product) {
             throw new HttpException('No se encontró la unidad', HttpStatus.NOT_FOUND);
         }
-        await unlink(resolve(product.imagePath));
+        await deletePhoto(product.imagePath);
         await this.productRepository.delete({id: productId});
         return product;
     }
 
-    async updateProduct(productId: number, imagePath: string, productDTO: ProductDTO): Promise<Product> {
-        let product = await this.productRepository.findOneOrFail({ where: { id: productId } });
+    async updateProduct(productId: number, productDTO: ProductDTO): Promise<Product> {
+        let product = await this.productRepository.findOne({ where: { id: productId } });
         if (!product) {
-            await unlink(imagePath);
             throw new HttpException('No se encontró el producto', HttpStatus.NOT_FOUND);
         }
-        const existPath = resolve(product.imagePath);
-        const { unitId, categoryId, name, detail, stock, unitPrice, comboPrice } = productDTO;
-        const unit = await this.unitRepository.findOne({ where: { id: unitId } });
-        if (!unit) {
-            throw new NotFoundException('No se encontró la unidad');
-        }
-        const category = await this.categoryRepository.findOne({ where: { id: categoryId } });
-        if (!category) {
-            throw new NotFoundException('No se encontró la categoría');
-        }
-        if (!existPath) {
-            throw new NotFoundException('No se encontró la imagen');
+        const { unitId, subcategoryId, name, detail, stock, unitPrice, weight, imagePath } = productDTO;
+        const unit = await this.getUnit(unitId);
+        const subcategory = await this.getSubCategory(subcategoryId);
+        if (product.imagePath !== imagePath) {
+            await deletePhoto(product.imagePath);
         }
         await this.productRepository.update({id: productId}, {
             name,
             detail,
             stock,
             unitPrice,
-            imagePath: !imagePath ? product.imagePath : imagePath,
-            comboPrice,
+            weight,
+            imagePath,
             unit,
-            category,
+            subcategory,
         });
-        await unlink(existPath);
         product = await this.productRepository.findOneOrFail({ where: { id: productId } });
         return product;
+    }
+
+    private async getUnit(unitId: number): Promise<Unit> {
+        const unit = await this.unitRepository.findOne({ where: { id: unitId } });
+        if (!unit) {
+            throw new NotFoundException('No se encontró la unidad');
+        }
+        return unit;
+    }
+
+    private async getSubCategory(subcategoryId: number): Promise<SubCategory> {
+        const subcategory = await this.subcategoryRepository.findOne({ where: { id: subcategoryId } });
+        if (!subcategory) {
+            throw new NotFoundException('No se encontró la categoría');
+        }
+        return subcategory;
+    }
+
+    async searchUnit(productId: number): Promise<Unit> {
+        const unit = await getRepository(Unit)
+            .createQueryBuilder('unit')
+            .innerJoin('unit.products', 'product', 'product.id = :id', { id: productId })
+            .getOne();
+        if (!unit) {
+            throw new NotFoundException('No se encontró la unidad');
+        }
+
+        return unit;
+    }
+
+    async searchSubCategory(productId: number): Promise<SubCategory> {
+        const subcategory = await getRepository(SubCategory)
+            .createQueryBuilder('subcategory')
+            .innerJoin('subcategory.products', 'product')
+            .where('product.id = :id', { id:  productId})
+            .getOne();
+        if (!subcategory) {
+            throw new NotFoundException('No se encontró la subcategoría');
+        }
+        return subcategory;
     }
 
 }

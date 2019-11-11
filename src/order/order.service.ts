@@ -1,6 +1,6 @@
 import { Details } from './details.entity';
 import { Product } from '../product/product.entity';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Order } from './order.entity';
 import { Repository, getRepository, getConnection } from 'typeorm';
@@ -17,19 +17,19 @@ export class OrderService {
     ) {}
 
     async getOrders(): Promise<Order[]> {
-        const orders = await this.orderRepository.find();
+        const orders = await this.orderRepository.find({ relations: ['user'] });
         return orders;
     }
 
     async getOrder(orderId: number): Promise<Order> {
-        const order = await this.orderRepository.findOne({ where: { id: orderId } });
+        const order = await this.orderRepository.findOne({ where: { id: orderId }, relations: ['user'] });
         if (!order) {
             throw new NotFoundException('No se encontró al orden');
         }
         return order;
     }
 
-    async getOrderByDate(date: Date): Promise<Order[]> {
+    async getOrderByDate(date: string): Promise<Order[]> {
         const order = await this.orderRepository.find({ where: { date } });
         if (!order) {
             throw new NotFoundException('No se encontró al orden');
@@ -39,17 +39,11 @@ export class OrderService {
 
     async createOrder(orderDTO: OrderDTO): Promise<any> {
         const { address, neigh, total, dateDelivery, userId, data } = orderDTO;
-        const user = await getRepository(User)
-            .createQueryBuilder('user')
-            .where('user.id = :id', {id: userId})
-            .getOne();
-        if (!user) {
-            throw new NotFoundException('No se encontró al usuario');
-        }
-        const order = await this.orderRepository.create({ address, neigh, total, dateDelivery, user});
+        const user = await this.getUser(userId);
+        const order = this.orderRepository.create({ address, neigh, total, dateDelivery, user});
         await this.orderRepository.save(order);
-        await this.createDetail(data);
         const lastOrder = await this.searchLastOrder();
+        await this.createDetails(data, lastOrder);
         const counter = await this.getCountOrders();
         this.gateway.wss.emit('countOrders', counter); // evento websocket
         this.gateway.wss.emit('userOrder', user);
@@ -57,7 +51,57 @@ export class OrderService {
         return lastOrder;
     }
 
-    async searchLastOrder() {
+    private async createDetails(data: any[], order: Order) {
+        // data = [ { productID: ?, quantity: ?, price: ? } ]
+        data.forEach(async (el, index) => {
+            try {
+                const product = await this.getProductFromDetail(el.productID);
+                await this.createDetail(el.price, el.quantity, order, product);
+            } catch (error) {
+                throw new HttpException('No se puede realizar la operación', HttpStatus.BAD_REQUEST);
+            }
+        });
+    }
+
+    private async createDetail(price: number, quantity: number, order: Order, product: Product) {
+        await getRepository(Details)
+            .createQueryBuilder()
+            .insert()
+            .into(Details)
+            .values({
+                price,
+                quantity,
+                order,
+                product,
+            })
+            .execute();
+    }
+
+    private async getProductFromDetail(productID: number): Promise<Product> {
+        const product = await getRepository(Product)
+                .createQueryBuilder('product')
+                .where('product.id = :id', { id: productID })
+                .getOne();
+        if (!product) {
+            throw new NotFoundException('No se encontró el producto');
+        }
+
+        return product;
+    }
+
+    private async getUser(userId: number): Promise<User> {
+        const user = await getRepository(User)
+            .createQueryBuilder('user')
+            .where('user.id = :id', {id: userId})
+            .getOne();
+        if (!user) {
+            throw new NotFoundException('No se encontró al usuario');
+        }
+
+        return user;
+    }
+
+    private async searchLastOrder() {
         const order = await getRepository(Order)
             .createQueryBuilder('order')
             .orderBy('order.id', 'DESC')
@@ -67,42 +111,49 @@ export class OrderService {
         return order;
     }
 
+    async getAmount() {
+        const amount = await getRepository(Order)
+            .createQueryBuilder('order')
+            .select('SUM(total) as amount')
+            .where('order.state = :state', { state: 'vendido' })
+            .getRawOne();
+
+        return !amount ? 0 : amount;
+    }
+
     async getCountOrders() {
         const count = await getRepository(Order)
             .createQueryBuilder('order')
-            .select('COUNT(*) as count')
-            .groupBy('order.id')
+            .select('COUNT(*) as counter')
+            .where('order.state = :state', { state: 'procesando' })
             .getRawOne();
 
-        return count;
+        return !count ? 0 : count;
     }
 
-    async createDetail(data: any[]) {
-        const order = await this.searchLastOrder();
-        // data = [ { productID: ?, quantity: ?, price: ? } ]
-        data.forEach(async (el) => {
-            const product = await getRepository(Product)
-                .createQueryBuilder('product')
-                .where('product.id = :id', { id: el.productID })
-                .getOne();
-            const details = new Details();
-            details.price = el.price;
-            details.quantity = el.quantity;
-            details.order = order;
-            details.product = product;
-            await getRepository(Details).save(details);
-        });
+    async getCountOrdersSell() {
+        const count = await getRepository(Order)
+            .createQueryBuilder('order')
+            .select('COUNT(*) as counter')
+            .where('order.state = :state', { state: 'vendido' })
+            .getRawOne();
+
+        return !count ? 0 : count;
+    }
+
+    async getCountOrdersCancel() {
+        const count = await getRepository(Order)
+            .createQueryBuilder('order')
+            .select('COUNT(*) as counter')
+            .where('order.state = :state', { state: 'cancelado' })
+            .getRawOne();
+
+        return !count ? 0 : count;
     }
 
     async updateStateOrder(orderID: number, newState: string) {
-        const order = await getRepository(Order)
-            .createQueryBuilder('order')
-            .where('order.id = :id', { id: orderID })
-            .getOne();
+        const order = await this.searchOrder(orderID);
 
-        if (!order) {
-            throw new NotFoundException('No se encontró la orden');
-        }
         await getConnection()
             .createQueryBuilder()
             .update(Order)
@@ -113,15 +164,20 @@ export class OrderService {
     }
 
     async deleteOrder(orderId: number): Promise<any> {
+        const or = await this.searchOrder(orderId);
+        await this.orderRepository.remove(or);
+        return or;
+    }
+
+    private async searchOrder(orderId: number): Promise<Order> {
         const or = await getRepository(Order)
             .createQueryBuilder('order')
             .where('order.id = :id', { id: orderId })
             .getOne();
         if (!or) {
-            throw new NotFoundException('No se encontró al orden');
+            throw new NotFoundException('Orden no encontrada');
         }
-        await getRepository(Details).delete({ order: or });
-        const order = this.orderRepository.delete({ id: orderId });
-        return order;
+        return or;
     }
+
 }

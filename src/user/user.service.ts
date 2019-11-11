@@ -1,6 +1,8 @@
-import { UserDTO, UserUp } from './user.dto';
+import { Order } from '../order/order.entity';
+import { UserDTO } from './user.dto';
 import { Injectable, NotFoundException, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import * as bcrypt from 'bcrypt';
 import { User } from './user.entity';
 import { Repository, getRepository } from 'typeorm';
 import { Rol } from '../rol/rol.entity';
@@ -17,35 +19,12 @@ export class UserService {
     ) {}
 
     async getUsers(): Promise<User[]> {
-        const users = await getRepository(User)
-            .createQueryBuilder('user')
-            .select([
-                'user.id',
-                'user.ci',
-                'user.name',
-                'user.lastname',
-                'user.age',
-                'user.email',
-                'user.phone',
-            ])
-            .getMany();
+        const users = await this.userRepository.find({ relations: ['rol'] });
         return users;
     }
 
     async getUser(userId: number): Promise<User> {
-        const user = await getRepository(User)
-        .createQueryBuilder('user')
-        .select([
-            'user.id',
-            'user.ci',
-            'user.name',
-            'user.lastname',
-            'user.age',
-            'user.email',
-            'user.phone',
-        ])
-        .where('user.id = :id', { id: userId })
-        .getOne();
+        const user = await this.userRepository.findOne({ where: { id: userId }, relations: ['rol'] });
         if (!user) {
             throw new NotFoundException('No se encontró el usuario');
         }
@@ -53,41 +32,42 @@ export class UserService {
     }
 
     async getUserCI(userCi: string): Promise<User> {
-        const user = await getRepository(User)
-        .createQueryBuilder('user')
-        .select([
-            'user.id',
-            'user.ci',
-            'user.name',
-            'user.lastname',
-            'user.age',
-            'user.email',
-            'user.phone',
-        ])
-        .where('user.ci = :ci', { ci: userCi })
-        .getOne();
+        const user = await this.userRepository.findOne({ where: { ci: userCi }, relations: ['rol'] });
         if (!user) {
             throw new NotFoundException('No se encontró el usuario');
         }
         return user;
     }
 
+    async getOrdersRelationated(userId: number) {
+        const orders = await getRepository(Order)
+            .createQueryBuilder('order')
+            .innerJoin('order.user', 'user', 'user.id = :id', { id: userId })
+            .getMany();
+        return orders;
+    }
+
     async createUser(userDTO: UserDTO): Promise<User> {
-        const {ci, name, lastname, age, email, password, phone, rolId } = userDTO;
+        const {ci, name, lastname, birthdate, email, password, phone, rolId } = userDTO;
         let user = await this.userRepository.findOne({ where: { email } });
         if (user) {
             throw new HttpException('El usuario ya existe', HttpStatus.BAD_REQUEST);
         }
-        const rol = await this.rolRepository.findOneOrFail({ id: rolId });
-        if (!rol) {
-            throw new HttpException('No se encontró el rol', HttpStatus.NOT_FOUND);
-        }
-        user = this.userRepository.create({ ci, name, lastname, age, email, password, phone, rol });
+        const rol = await this.searchRol(rolId);
+        user = this.userRepository.create({ ci, name, lastname, birthdate, email, password, phone, rol });
         await this.userRepository.save(user);
         const lastUser = await this.getLastUser();
         const counter = await this.getCountUsers();
         this.gateway.wss.emit('countUsers', counter);
         return lastUser;
+    }
+
+    private async searchRol(rolId: number): Promise<Rol> {
+        const rol = await this.rolRepository.findOne({ id: rolId });
+        if (!rol) {
+            throw new HttpException('No se encontró el rol', HttpStatus.NOT_FOUND);
+        }
+        return rol;
     }
 
     async getLastUser() {
@@ -102,15 +82,14 @@ export class UserService {
     async getCountUsers() {
         const count = await getRepository(User)
             .createQueryBuilder('user')
-            .select('COUNT(*) as count')
-            .groupBy('user.id')
+            .select('COUNT(id) as counter')
             .getRawOne();
 
-        return count;
+        return !count ? 0 : count;
     }
 
     async deleteUser(userId: number): Promise<any> {
-        const user = await this.userRepository.findOneOrFail({ id: userId });
+        const user = await this.userRepository.findOne({ id: userId });
         if (!user) {
             throw new HttpException('El usuario no se encontró', HttpStatus.BAD_REQUEST);
         }
@@ -120,19 +99,30 @@ export class UserService {
         return user;
     }
 
-    async updateUser(userId: number, userUp: UserUp): Promise<User> {
-        const {ci, name, lastname, age, email, phone} = userUp;
-        let user = await this.userRepository.findOneOrFail({where: { id: userId }});
+    async updateUser(userId: number, userDTO: UserDTO): Promise<User> {
+        const {ci, name, lastname, birthdate, email, phone, rolId} = userDTO;
+        let user = await this.userRepository.findOne({where: { id: userId }});
         if (!user) {
             throw new HttpException('No se encontró el usuario', HttpStatus.NOT_FOUND);
         }
+        const rol = await this.searchRol(rolId);
         await getRepository(User)
             .createQueryBuilder('user')
             .update(User)
-            .set({ ci, name, lastname, age, email, phone })
+            .set({ ci, name, lastname, birthdate, email, phone, rol })
             .where('user.id = :id', { id: userId })
             .execute();
         user = await this.userRepository.findOne({ where: { id: userId } });
         return user;
+    }
+
+    async updatePassword(password: string, userId: number) {
+        const user = await this.userRepository.findOne(userId);
+        if (!user) {
+            throw new HttpException('No se encontró el usuario', HttpStatus.NOT_FOUND);
+        }
+        const hashedPassword = await bcrypt.hash(password, 12);
+        await this.userRepository.update(user.id, { password: hashedPassword });
+        return 'Contraseña actualizada';
     }
 }

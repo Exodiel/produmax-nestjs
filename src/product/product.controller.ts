@@ -1,13 +1,7 @@
 import { Response } from 'express';
 import { ProductService } from './product.service';
-import { FileInterceptor } from '@nestjs/platform-express';
-// tslint:disable-next-line: max-line-length
-import { Controller, Get, Res, HttpStatus, Param, NotFoundException, Post, UseInterceptors, UploadedFile, Body, HttpException, Delete, Put, Query } from '@nestjs/common';
-import { diskStorage } from 'multer';
-import { extname, resolve } from 'path';
-import { v4 as uuid } from 'uuid';
+import { Controller, Get, Res, HttpStatus, NotFoundException, Post, Body, Delete, Put, Query } from '@nestjs/common';
 import { ProductDTO } from './product.dto';
-import { unlink } from 'fs-extra';
 
 @Controller('products')
 export class ProductController {
@@ -29,6 +23,26 @@ export class ProductController {
         return res.status(HttpStatus.OK).json(product);
     }
 
+    @Get('/counter')
+    async getProductsCount(@Res() res: Response) {
+        const counter = await this.productService.getCountProducts();
+
+        return res.status(HttpStatus.OK).json(counter);
+    }
+
+    @Get('/single/unit')
+    async getUnit(@Res() res: Response, @Query('productId') productId: number) {
+        const unit = await this.productService.searchUnit(productId);
+
+        return res.status(HttpStatus.OK).json(unit);
+    }
+
+    @Get('/single/subcategory')
+    async getSubCategory(@Res() res: Response, @Query('productId') productId: number) {
+        const subcategory = await this.productService.searchSubCategory(productId);
+        return res.status(HttpStatus.OK).json(subcategory);
+    }
+
     @Get('/search-name')
     async getProductByName(@Res() res: Response, @Query('name') name: string) {
         const product = await this.productService.getProductByName(name);
@@ -38,34 +52,10 @@ export class ProductController {
     }
 
     @Post('/create')
-    @UseInterceptors(FileInterceptor('image', {
-        limits: {
-            fileSize: 1 * 1000 * 1000,
-        },
-        fileFilter: async (req: any, file: any, cb: any) => {
-            if (file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
-                // Allow storage of file
-                cb(null, true);
-            } else {
-                // Reject file
-                await unlink(resolve(file.path));
-                cb(new HttpException(`Unsupported file type ${extname(file.originalname)}`, HttpStatus.BAD_REQUEST), false);
-            }
-        },
-        storage: diskStorage({
-            destination: './uploads',
-            filename: (req, file, cb) => {
-              // Calling the callback passing the random name generated with the original extension name
-              cb(null, `${uuid()}${extname(file.originalname)}`);
-            },
-        }),
-    }))
-    async createProduct(@Res() res: Response, @UploadedFile() file, @Body() productDTO: ProductDTO) {
-        const imagePath = file.path;
-        const newProduct = await this.productService.createProduct(productDTO, imagePath);
+    async createProduct(@Res() res: Response, @Body() productDTO: ProductDTO) {
+        const newProduct = await this.productService.createProduct(productDTO);
         return res.status(HttpStatus.CREATED).json({
             message: 'Producto Creado',
-            newProduct,
         });
     }
 
@@ -76,34 +66,11 @@ export class ProductController {
     }
 
     @Put('/update')
-    @UseInterceptors(FileInterceptor('image', {
-        limits: {
-            fileSize: 1 * 1000 * 1000,
-        },
-        fileFilter: async (req: any, file: any, cb: any) => {
-            if (file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
-                // Allow storage of file
-                cb(null, true);
-            } else {
-                // Reject file
-                await unlink(resolve(file.path));
-                cb(new HttpException(`Unsupported file type ${extname(file.originalname)}`, HttpStatus.BAD_REQUEST), false);
-            }
-        },
-        storage: diskStorage({
-            destination: './uploads',
-            filename: (req, file, cb) => {
-              // Calling the callback passing the random name generated with the original extension name
-              cb(null, `${uuid()}${extname(file.originalname)}`);
-            },
-        }),
-    }))
-    async updateProduct(@Res() res: Response, @UploadedFile() file, @Query('id') id: number, @Body() productDTO: ProductDTO) {
-        const imagePath = file.path;
-        const updatedProduct = await this.productService.updateProduct(id, imagePath, productDTO);
+    async updateProduct(@Res() res: Response, @Query('id') id: number, @Body() productDTO: ProductDTO) {
+        const updatedProduct = await this.productService.updateProduct(id, productDTO);
         return res.status(HttpStatus.OK).json({
             message: 'Producto actualizado',
-            updatedProduct,
         });
     }
+
 }

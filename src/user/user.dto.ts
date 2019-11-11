@@ -2,7 +2,7 @@ export class UserDTO {
     ci: string;
     name: string;
     lastname: string;
-    age: number;
+    birthdate: string;
     email: string;
     password: string;
     phone: string;
@@ -20,18 +20,8 @@ export class UserR {
     ci: string;
     name: string;
     lastname: string;
-    age: number;
+    birthdate: string;
     email: string;
     password: string;
-    phone: string;
-}
-
-// tslint:disable-next-line:max-classes-per-file
-export class UserUp {
-    ci: string;
-    name: string;
-    lastname: string;
-    age: number;
-    email: string;
     phone: string;
 }

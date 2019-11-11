@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
 import { Unit } from '../unit/unit.entity';
-import { Category } from '../category/category.entity';
 import { IsString, Length, IsInt } from 'class-validator';
+import { SubCategory } from '../sub-category/sub.category.entity';
 import { Details } from '../order/details.entity';
 
 @Entity('product')
@@ -14,7 +14,7 @@ export class Product {
         length: 120,
     })
     @IsString()
-    @Length(1, 120)
+    @Length(3, 120)
     name: string;
 
     @Column({
@@ -41,9 +41,8 @@ export class Product {
         type: 'decimal',
         precision: 5,
         scale: 2,
-        default: 0,
     })
-    comboPrice: number;
+    weight: number;
 
     @Column({
         type: 'varchar',
@@ -52,11 +51,11 @@ export class Product {
     @IsString()
     imagePath: string;
 
-    @ManyToOne(type => Unit, unit => unit.product)
+    @ManyToOne(type => Unit, unit => unit.products)
     unit: Unit;
 
-    @ManyToOne(type => Category, category => category.product)
-    category: Category;
+    @ManyToOne(type => SubCategory, subcategory => subcategory.products)
+    subcategory: SubCategory;
 
     @OneToMany(type => Details, (details) => details.product)
     details: Details[];

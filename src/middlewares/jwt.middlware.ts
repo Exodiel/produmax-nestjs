@@ -16,7 +16,6 @@ export class JwtMiddleware implements NestMiddleware {
         let jwtPayload: any;
         try {
             jwtPayload = await jwt.verify(token, jwtConstant.secret);
-            // req.jwtPayload = jwtPayload;
             req.jwtPayload = jwtPayload;
         } catch (error) {
             throw new UnauthorizedException('No se encuentra autorizado');

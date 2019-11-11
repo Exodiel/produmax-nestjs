@@ -24,6 +24,9 @@ export class OrderModule implements NestModule {
     consumer.apply(RolMiddleware)
       .forRoutes(
         { path: 'order/delete', method: RequestMethod.DELETE},
+        { path: 'order/counter', method: RequestMethod.GET },
+        { path: 'order/counter-sell', method: RequestMethod.GET },
+        { path: 'order/counter-cancel', method: RequestMethod.GET },
       );
   }
 }

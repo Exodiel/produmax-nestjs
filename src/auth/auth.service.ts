@@ -1,6 +1,6 @@
 import { UserR } from '../user/user.dto';
 import { UserRO } from '../user/user.dto';
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../user/user.entity';
@@ -29,16 +29,18 @@ export class AuthService {
 
         return count;
     }
-
+    // TODO: agregar token_key a la api en cada llamada
     async login(userRO: UserRO) {
         const { email, password } = userRO;
         const user = await getRepository(User)
             .createQueryBuilder('user')
+            .addSelect('user.password')
+            .leftJoinAndSelect('user.rol', 'rol')
             .where('user.email = :email', {email})
             .getOne();
         if (!user) {
             throw new HttpException(
-                'Usuario no es correcto',
+                'Correo incorrecto',
                 HttpStatus.BAD_REQUEST,
             );
         }
@@ -49,6 +51,17 @@ export class AuthService {
                 HttpStatus.BAD_REQUEST,
             );
         }
+        const rol = await this.searchUserRolType(email);
+        const type = this.typeUser(rol.name) ;
+        const payload = { email: user.email, id: user.id, rol: rol.name };
+        return {
+            access_token: this.jwtService.sign(payload),
+            type,
+            user,
+        };
+    }
+
+    private async searchUserRolType(email: string): Promise<Rol> {
         const rol = await getRepository(Rol)
             .createQueryBuilder('rol')
             .select('rol.name')
@@ -56,20 +69,13 @@ export class AuthService {
             .where('user.email = :email', { email })
             .getOne();
         if (!rol) {
-            throw new HttpException(
-                'Rol no encontrado',
-                HttpStatus.NOT_FOUND,
-            );
+            throw new HttpException('Rol no encontrado', HttpStatus.NOT_FOUND);
         }
-        const type = this.typeUser(rol.name) ;
-        const payload = { email: user.email, id: user.id, rol: rol.name };
-        return {
-            access_token: this.jwtService.sign(payload),
-            type,
-        };
+
+        return rol;
     }
 
-    typeUser(type: string): number {
+    private typeUser(type: string): number {
         let t: number;
         switch (type) {
             case 'admin':
@@ -93,29 +99,28 @@ export class AuthService {
         if (!rol) {
             throw new HttpException('No se encontró el rol', HttpStatus.BAD_REQUEST);
         }
-        const { ci, name, lastname, age, email, password, phone } = userR;
-        let user = await getRepository(User)
-            .createQueryBuilder('user')
-            .select([
-                'user.id',
-                'user.name',
-                'user.lastname',
-                'user.age',
-                'user.email',
-                'user.phone',
-            ])
-            .where('user.email = : email', { email })
-            .getOne();
-        if (user) {
-            throw new HttpException('Ya existe el usuario', HttpStatus.BAD_REQUEST);
-        }
-        user = this.userRepository.create({ ci, name, lastname, age, email, password, phone, rol });
+        const { ci, name, lastname, birthdate, email, password, phone } = userR;
+        await this.searchUserByEmail(email);
+        const hashedPassword = await bcrypt.hash(password, 12);
+        const user = this.userRepository.create({ ci, name, lastname, birthdate, email, password: hashedPassword, phone, rol });
         await this.userRepository.save(user);
         const counter = await this.getCountUsers();
+        const type = this.typeUser(rol.name) ;
         this.gateway.wss.emit('countUsers', counter);
         const payload = { email: user.email, id: user.id, rol: rol.name };
         return {
             access_token: this.jwtService.sign(payload),
+            type,
+            user,
         };
+    }
+
+    private async searchUserByEmail(email: string): Promise<any> {
+        const user = await this.userRepository.findOne({ where: { email } });
+        if (user) {
+            throw new HttpException('El usuario ya existe', HttpStatus.BAD_REQUEST);
+        }
+
+        return false;
     }
 }

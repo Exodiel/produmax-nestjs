@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, BeforeInsert, OneToMany, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, BeforeInsert } from 'typeorm';
 import { IsString, IsInt, Min, Length, IsEmail } from 'class-validator';
 import { Rol } from '../rol/rol.entity';
 import * as bcrypt from 'bcrypt';
@@ -31,11 +31,11 @@ export class User {
     lastname: string;
 
     @Column({
-        type: 'smallint',
+        type: 'varchar',
+        length: 11,
     })
-    @IsInt()
-    @Min(18)
-    age: number;
+    @IsString()
+    birthdate: string;
 
     @Column({
         type: 'varchar',
@@ -49,6 +49,7 @@ export class User {
     @Column({
         type: 'varchar',
         length: 90,
+        select: false,
     })
     @Length(6, 90)
     password: string;
@@ -63,12 +64,7 @@ export class User {
     rol: Rol;
 
     @OneToMany(type => Order, order => order.user)
-    order: Order[];
-
-    @BeforeInsert()
-    async hashPasword() {
-        this.password = await bcrypt.hash(this.password, 12);
-    }
+    orders: Order[];
 
     async comparePassword(attempt: string): Promise<boolean> {
         return bcrypt.compare(attempt, this.password);

@@ -1,5 +1,6 @@
+import { SubCategory } from '../sub-category/sub.category.entity';
 import { PrimaryGeneratedColumn, Column, Entity, OneToMany } from 'typeorm';
-import { Product } from '../product/product.entity';
+import { IsString } from 'class-validator';
 
 @Entity('category')
 export class Category {
@@ -12,6 +13,13 @@ export class Category {
     })
     name: string;
 
-    @OneToMany(type => Product, product => product.category)
-    product: Product[];
+    @Column({
+        type: 'varchar',
+        length: 200,
+    })
+    @IsString()
+    imagePath: string;
+
+    @OneToMany(type => SubCategory, subcategory => subcategory.category)
+    subcategories: SubCategory[];
 }

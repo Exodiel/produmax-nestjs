@@ -22,5 +22,5 @@ export class Unit {
     symbol: string;
 
     @OneToMany(type => Product, product => product.unit)
-    product: Product[];
+    products: Product[];
 }

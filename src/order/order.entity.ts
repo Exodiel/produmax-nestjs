@@ -37,8 +37,10 @@ export class Order {
     total: number;
 
     @Column({
-        type: 'date',
+        type: 'varchar',
+        length: 11,
     })
+    @IsString()
     date: string;
 
     @Column({
@@ -59,7 +61,7 @@ export class Order {
         this.state = 'procesando';
     }
 
-    @ManyToOne(type => User, user => user.order)
+    @ManyToOne(type => User, user => user.orders)
     user: User;
 
     @OneToMany(type => Details, (details) => details.order)
