@@ -2,9 +2,11 @@ import { Injectable, NestMiddleware, UnauthorizedException, HttpException, HttpS
 import { Request, Response, NextFunction } from 'express';
 import { jwtConstant } from '../auth/constant';
 import * as jwt from 'jsonwebtoken';
+import { RequestCustom } from '../custom/RequestCustom';
 @Injectable()
 export class JwtMiddleware implements NestMiddleware {
-    async use(req: Request, res: Response, next: NextFunction) {
+    async use(expressRequest: Request, res: Response, next: NextFunction) {
+        const req = expressRequest as RequestCustom;
         if (!req.headers.authorization) {
             throw new UnauthorizedException('No se encuentra autorizado');
         }

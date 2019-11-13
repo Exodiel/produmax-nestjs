@@ -2,10 +2,12 @@ import { Injectable, NestMiddleware, NotFoundException, UnauthorizedException } 
 import { Request, Response, NextFunction } from 'express';
 import { getRepository } from 'typeorm';
 import { Rol } from '../rol/rol.entity';
+import { RequestCustom } from '../custom/RequestCustom';
 
 @Injectable()
 export class RolMiddleware implements NestMiddleware {
-    async use(req: Request, res: Response, next: NextFunction) {
+    async use(expressRequest: Request, res: Response, next: NextFunction) {
+        const req = expressRequest as RequestCustom;
         const { rol } = req.jwtPayload;
         try {
             const rolModel = await getRepository(Rol)
