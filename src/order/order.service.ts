@@ -17,12 +17,12 @@ export class OrderService {
     ) {}
 
     async getOrders(): Promise<Order[]> {
-        const orders = await this.orderRepository.find({ relations: ['user'] });
+        const orders = await this.orderRepository.find({ relations: ['user', 'user.rol'] });
         return orders;
     }
 
     async getOrder(orderId: number): Promise<Order> {
-        const order = await this.orderRepository.findOne({ where: { id: orderId }, relations: ['user'] });
+        const order = await this.orderRepository.findOne({ where: { id: orderId }, relations: ['user', 'user.rol'] });
         if (!order) {
             throw new NotFoundException('No se encontró al orden');
         }
@@ -152,7 +152,7 @@ export class OrderService {
     }
 
     async updateStateOrder(orderID: number, newState: string) {
-        const order = await this.searchOrder(orderID);
+        await this.searchOrder(orderID);
 
         await getConnection()
             .createQueryBuilder()

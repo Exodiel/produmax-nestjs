@@ -19,7 +19,7 @@ import { AppGateway } from '../app.gateway';
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       secret: jwtConstant.secret,
-      signOptions: { expiresIn: 60 * 60 * 24 },
+      signOptions: { expiresIn: '60d' },
     }),
     UserModule,
     RolModule,

@@ -8,7 +8,6 @@ import {
     Post,
     Body,
     Put,
-    Param,
     Delete,
 } from '@nestjs/common';
 import { Response } from 'express';
@@ -21,6 +20,12 @@ export class SubCategoryController {
     @Get('/')
     async getSubCategories(@Res() res: Response) {
         const subcategories = await this.subCategoryService.getSubcategories();
+        res.status(HttpStatus.OK).json(subcategories);
+    }
+
+    @Get('/relationated')
+    async getSubCategoriesRelationated(@Res() res: Response, @Query('categoryId') categoryId: number) {
+        const subcategories = await this.subCategoryService.getSubCategoriesRelationated(categoryId);
         res.status(HttpStatus.OK).json(subcategories);
     }
 
@@ -45,7 +50,7 @@ export class SubCategoryController {
     }
 
     @Put('/update-subcategory')
-    async updateSubCategory(@Res() res: Response, @Body() subcategoryDTO: SubCategoryDTO, @Param('id') id: number) {
+    async updateSubCategory(@Res() res: Response, @Body() subcategoryDTO: SubCategoryDTO, @Query('id') id: number) {
         const subcategory = await this.subCategoryService.updateSubCategory(id, subcategoryDTO);
         return res.status(HttpStatus.OK).json({
             message: 'SubCategoría actualizada',

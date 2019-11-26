@@ -6,8 +6,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './product.entity';
 import { Repository, getRepository } from 'typeorm';
 import { SubCategory } from '../sub-category/sub.category.entity';
-import { unlink } from 'fs-extra';
-import { resolve } from 'path';
 import { deletePhoto } from '../utils/file-uploading';
 
 @Injectable()

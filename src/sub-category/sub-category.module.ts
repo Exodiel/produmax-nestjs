@@ -21,6 +21,7 @@ export class SubCategoryModule implements NestModule {
         { path: 'subcategories/', method: RequestMethod.GET },
         { path: 'subcategories/single', method: RequestMethod.GET },
         { path: 'subcategories/single/category', method: RequestMethod.GET },
+        { path: 'subcategories/relationated', method: RequestMethod.GET },
       )
       .forRoutes(
         { path: 'subcategories/', method: RequestMethod.POST },

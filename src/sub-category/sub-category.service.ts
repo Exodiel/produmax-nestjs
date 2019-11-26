@@ -18,6 +18,12 @@ export class SubCategoryService {
         return subcategories;
     }
 
+    async getSubCategoriesRelationated(categoryId: number): Promise<SubCategory[]> {
+        const subcategories = await this.subcategoryRepository.find({ relations: ['products'], where: { category: categoryId } });
+
+        return subcategories;
+    }
+
     async getSubcategory(id: number): Promise<SubCategory> {
         const subcategory = await this.subcategoryRepository.findOneOrFail(id, { relations: ['products'] });
         return subcategory;

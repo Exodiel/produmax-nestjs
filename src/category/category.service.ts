@@ -3,8 +3,6 @@ import { Injectable, HttpException, HttpStatus, NotFoundException } from '@nestj
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, getRepository } from 'typeorm';
 import { Category } from './category.entity';
-import { unlink } from 'fs-extra';
-import { resolve } from 'path';
 import { deletePhoto } from '../utils/file-uploading';
 
 @Injectable()
@@ -12,7 +10,7 @@ export class CategoryService {
     constructor(@InjectRepository(Category) private readonly categoryRepository: Repository<Category>) {}
 
     async getCategories(): Promise<Category[]> {
-        const categories = await this.categoryRepository.find({ relations: ['subcategories'] });
+        const categories = await this.categoryRepository.find();
         return categories;
     }
 
