@@ -1,3 +1,4 @@
+import { Image } from '../image/image.entity';
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
 import { Unit } from '../unit/unit.entity';
 import { IsString, Length, IsInt } from 'class-validator';
@@ -44,13 +45,6 @@ export class Product {
     })
     weight: number;
 
-    @Column({
-        type: 'varchar',
-        length: 200,
-    })
-    @IsString()
-    imagePath: string;
-
     @ManyToOne(type => Unit, unit => unit.products)
     unit: Unit;
 
@@ -59,4 +53,7 @@ export class Product {
 
     @OneToMany(type => Details, (details) => details.product)
     details: Details[];
+
+    @ManyToOne(type => Image, image => image.products)
+    image: Image;
 }

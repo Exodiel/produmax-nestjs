@@ -63,7 +63,7 @@ export class UserController {
     @Post('/create')
     async createUser(@Res() res: Response, @Body() userDTO: UserDTO) {
         const user = await this.userService.createUser(userDTO);
-        return res.status(HttpStatus.OK).json({
+        return res.status(HttpStatus.CREATED).json({
             message: 'Usuario creado',
         });
     }

@@ -1,4 +1,4 @@
 export class CategoryDTO {
     name: string;
-    imagePath: string;
+    imageId: number;
 }

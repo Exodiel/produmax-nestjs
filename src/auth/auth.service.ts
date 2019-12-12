@@ -8,6 +8,8 @@ import { Repository, getRepository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Rol } from '../rol/rol.entity';
 import { AppGateway } from '../app.gateway';
+import { Session } from '../session/session.entity';
+import { EXPIRES_IN } from '../constants/constant';
 
 @Injectable()
 export class AuthService {
@@ -17,6 +19,8 @@ export class AuthService {
         private readonly userRepository: Repository<User>,
         @InjectRepository(Rol)
         private readonly rolRepository: Repository<Rol>,
+        @InjectRepository(Session)
+        private readonly sessionRepository: Repository<Session>,
         private gateway: AppGateway,
     ) {}
 
@@ -29,7 +33,7 @@ export class AuthService {
 
         return count;
     }
-    // TODO: agregar token_key a la api en cada llamada
+
     async login(userRO: UserRO) {
         const { email, password } = userRO;
         const user = await getRepository(User)
@@ -54,9 +58,15 @@ export class AuthService {
         const rol = await this.searchUserRolType(email);
         const type = this.typeUser(rol.name) ;
         const payload = { email: user.email, id: user.id, rol: rol.name };
+        const payloadString = JSON.stringify(payload);
+        const token = this.jwtService.sign(payload);
+        const session = this.sessionRepository.create({ payload: payloadString, token, expiresAt: EXPIRES_IN, user, lastActivity: Date.now() });
+        await this.sessionRepository.save(session);
         return {
-            access_token: this.jwtService.sign(payload),
+            access_token: token,
             type,
+            EXPIRES_IN,
+            sessionId: session.sessionId,
             user,
         };
     }
@@ -101,18 +111,31 @@ export class AuthService {
         }
         const { ci, name, lastname, birthdate, email, password, phone } = userR;
         await this.searchUserByEmail(email);
-        const hashedPassword = await bcrypt.hash(password, 12);
-        const user = this.userRepository.create({ ci, name, lastname, birthdate, email, password: hashedPassword, phone, rol });
+        const user = this.userRepository.create({ ci, name, lastname, birthdate, email, password, phone, rol });
         await this.userRepository.save(user);
         const counter = await this.getCountUsers();
         const type = this.typeUser(rol.name) ;
         this.gateway.wss.emit('countUsers', counter);
         const payload = { email: user.email, id: user.id, rol: rol.name };
+        const payloadString = JSON.stringify(payload);
+        const token = this.jwtService.sign(payload);
+        const session = this.sessionRepository.create({ payload: payloadString, token, expiresAt: EXPIRES_IN, user, lastActivity: Date.now()});
+        await this.sessionRepository.save(session);
         return {
-            access_token: this.jwtService.sign(payload),
+            access_token: token,
             type,
+            EXPIRES_IN,
+            sessionId: session.sessionId,
             user,
         };
+    }
+
+    async destroySession(sessionId: string) {
+        const session = await this.sessionRepository.findOne(sessionId);
+        if (!session) {
+            throw new NotFoundException('No existe sesión');
+        }
+        await this.sessionRepository.remove(session);
     }
 
     private async searchUserByEmail(email: string): Promise<any> {

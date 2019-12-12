@@ -38,7 +38,7 @@ export class UnitController {
     }
 
     @Put('/update')
-    async updateUnit(@Res() res: Response, @Query('id') id, @Body() unitDTO: UnitDTO) {
+    async updateUnit(@Res() res: Response, @Query('id') id: number, @Body() unitDTO: UnitDTO) {
         const updatedUnit = await this.unitService.updateUnit(id, unitDTO);
 
         return res.status(HttpStatus.OK).json({

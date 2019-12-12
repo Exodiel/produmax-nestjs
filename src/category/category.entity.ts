@@ -1,6 +1,6 @@
 import { SubCategory } from '../sub-category/sub.category.entity';
-import { PrimaryGeneratedColumn, Column, Entity, OneToMany } from 'typeorm';
-import { IsString } from 'class-validator';
+import { PrimaryGeneratedColumn, Column, Entity, OneToMany, ManyToOne } from 'typeorm';
+import { Image } from '../image/image.entity';
 
 @Entity('category')
 export class Category {
@@ -9,17 +9,13 @@ export class Category {
 
     @Column({
         type: 'varchar',
-        length: 100,
+        length: 40,
     })
     name: string;
 
-    @Column({
-        type: 'varchar',
-        length: 200,
-    })
-    @IsString()
-    imagePath: string;
-
     @OneToMany(type => SubCategory, subcategory => subcategory.category)
     subcategories: SubCategory[];
+
+    @ManyToOne(type => Image, image => image.categories)
+    image: Image;
 }

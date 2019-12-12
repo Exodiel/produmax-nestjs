@@ -10,12 +10,14 @@ import { RolMiddleware } from '../middlewares/rol.middleware';
 import { AppGateway } from '../app.gateway';
 import { SubCategory } from '../sub-category/sub.category.entity';
 import { SubCategoryService } from '../sub-category/sub-category.service';
+import { Image } from '../image/image.entity';
+import { ImageService } from '../image/image.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Product, SubCategory, Unit])],
+  imports: [TypeOrmModule.forFeature([Product, SubCategory, Unit, Image])],
   controllers: [ProductController],
-  providers: [ProductService, UnitService, SubCategoryService, AppGateway],
-  exports: [ProductModule],
+  providers: [ProductService, UnitService, SubCategoryService, ImageService, AppGateway],
+  exports: [ProductService],
 })
 export class ProductModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

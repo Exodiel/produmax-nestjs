@@ -10,7 +10,7 @@ import { RolMiddleware } from '../middlewares/rol.middleware';
   imports: [TypeOrmModule.forFeature([Rol])],
   controllers: [RolController],
   providers: [RolService],
-  exports: [RolModule],
+  exports: [RolService],
 })
 export class RolModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

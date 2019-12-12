@@ -22,7 +22,7 @@ export class RolController {
     @Post('/')
     async createRol(@Res() res: Response, @Body() rolDTO: RolDTO) {
         const newRol = await this.rolService.createRol(rolDTO);
-        return res.status(HttpStatus.OK).json({
+        return res.status(HttpStatus.CREATED).json({
             message: 'Rol creado',
         });
     }

@@ -1,8 +1,10 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, BeforeInsert } from 'typeorm';
-import { IsString, IsInt, Min, Length, IsEmail } from 'class-validator';
+import { IsString, Length, IsEmail } from 'class-validator';
 import { Rol } from '../rol/rol.entity';
 import * as bcrypt from 'bcrypt';
 import { Order } from '../order/order.entity';
+import { Image } from '../image/image.entity';
+import { Session } from '../session/session.entity';
 
 @Entity('user')
 export class User {
@@ -65,6 +67,12 @@ export class User {
 
     @OneToMany(type => Order, order => order.user)
     orders: Order[];
+
+    @ManyToOne(type => Image, image => image.users)
+    image: Image;
+
+    @OneToMany(type => Session, session => session.user)
+    sessions: Session[];
 
     async comparePassword(attempt: string): Promise<boolean> {
         return bcrypt.compare(attempt, this.password);

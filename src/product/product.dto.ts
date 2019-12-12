@@ -8,7 +8,6 @@ export class ProductRO {
     stock: number;
     unitPrice: number;
     weight: number;
-    imagePath: string;
     unit: Unit;
     subcategory: SubCategory;
 }
@@ -20,7 +19,7 @@ export class ProductDTO {
     stock: number;
     unitPrice: number;
     weight: number;
-    imagePath: string;
     unitId: number;
     subcategoryId: number;
+    imageId: number;
 }

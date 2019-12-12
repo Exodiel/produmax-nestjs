@@ -7,6 +7,7 @@ export class UserDTO {
     password: string;
     phone: string;
     rolId: number;
+    imageId: number;
 }
 
 // tslint:disable-next-line: max-classes-per-file

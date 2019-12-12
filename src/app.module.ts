@@ -13,8 +13,7 @@ import { AuthModule } from './auth/auth.module';
 import { OrderModule } from './order/order.module';
 import { AppGateway } from './app.gateway';
 import { SubCategoryModule } from './sub-category/sub-category.module';
-import { JwtMiddleware } from './middlewares/jwt.middlware';
-import { RolMiddleware } from './middlewares/rol.middleware';
+import { ImageModule } from './image/image.module';
 
 @Module({
   imports: [CategoryModule, SubCategoryModule, UnitModule, ProductModule, RolModule, UserModule, AuthModule, TypeOrmModule.forRootAsync({
@@ -22,26 +21,19 @@ import { RolMiddleware } from './middlewares/rol.middleware';
     inject: [ConfigService],
     useFactory: (configService: ConfigService) => ({
       type: 'mysql',
-      port: Number(configService.get('PORT')),
-      username: configService.get('USERNAME'),
-      password: configService.get('PASSWORD'),
-      database: configService.get('DATABASE'),
-      host: configService.get('HOST'),
-      charset: configService.get('COLLATION'),
+      port: configService.port,
+      username: configService.userName,
+      password: configService.password,
+      database: configService.database,
+      host: configService.host,
+      charset: configService.collation,
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
       subscribers: [__dirname + '/**/**/subscriber/*{.ts,.js}'],
     }),
-  }), OrderModule, SubCategoryModule],
+  }), OrderModule, SubCategoryModule, ImageModule,
+  ],
   controllers: [AppController],
   providers: [AppService, AppGateway],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(JwtMiddleware, RolMiddleware)
-      .forRoutes(
-        { path: '/upload', method: RequestMethod.POST },
-      );
-  }
-}
+export class AppModule {}

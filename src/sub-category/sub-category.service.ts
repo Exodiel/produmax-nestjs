@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Injectable, HttpException, HttpStatus, NotFoundException } from '@nestjs/common';
 import { Repository, getRepository } from 'typeorm';
 import { Category } from '../category/category.entity';
+import { Image } from '../image/image.entity';
 import { deletePhoto } from '../utils/file-uploading';
 
 @Injectable()
@@ -11,26 +12,28 @@ export class SubCategoryService {
     constructor(
         @InjectRepository(SubCategory)
         private readonly subcategoryRepository: Repository<SubCategory>,
+        @InjectRepository(Image)
+        private readonly imageRepository: Repository<Image>,
     ) {}
 
     async getSubcategories(): Promise<SubCategory[]> {
-        const subcategories = await this.subcategoryRepository.find({ relations: ['products'] });
+        const subcategories = await this.subcategoryRepository.find({ relations: ['image', 'products'] });
         return subcategories;
     }
 
     async getSubCategoriesRelationated(categoryId: number): Promise<SubCategory[]> {
-        const subcategories = await this.subcategoryRepository.find({ relations: ['products'], where: { category: categoryId } });
+        const subcategories = await this.subcategoryRepository.find({ relations: ['image', 'products'], where: { category: categoryId } });
 
         return subcategories;
     }
 
     async getSubcategory(id: number): Promise<SubCategory> {
-        const subcategory = await this.subcategoryRepository.findOneOrFail(id, { relations: ['products'] });
+        const subcategory = await this.subcategoryRepository.findOneOrFail(id, { relations: ['image', 'products'] });
         return subcategory;
     }
 
     async createSubcategory(subCategoryDTO: SubCategoryDTO): Promise<SubCategory> {
-        const { name, imagePath, categoryId } = subCategoryDTO;
+        const { name, categoryId, imageId } = subCategoryDTO;
         const category = await getRepository(Category)
             .createQueryBuilder('category')
             .where('category.id = :id', { id: categoryId })
@@ -38,10 +41,20 @@ export class SubCategoryService {
         if (!category) {
             throw new NotFoundException('Categoría no encontrada');
         }
-        const subcategory = this.subcategoryRepository.create({ name, imagePath, category });
+        const image = await this.searchImage(imageId);
+        const subcategory = this.subcategoryRepository.create({ name, category, image });
         await this.subcategoryRepository.save(subcategory);
         const lastSubcategory = await this.getLastSubcategory();
         return lastSubcategory;
+    }
+
+    private async searchImage(imageId: number): Promise<Image> {
+        const image = await this.imageRepository.findOne({ where: { id: imageId } });
+        if (!image) {
+            throw new NotFoundException('No se encontró la imagen');
+        }
+
+        return image;
     }
 
     async getLastSubcategory() {
@@ -58,13 +71,16 @@ export class SubCategoryService {
         if (!subcategory) {
             throw new HttpException('No se encontró la categoría', HttpStatus.NOT_FOUND);
         }
-        const { name, imagePath } = subCategoryDTO;
-        if (subcategory.imagePath !== imagePath) {
-            await deletePhoto(subcategory.imagePath);
+        const { name, imageId } = subCategoryDTO;
+        const image = await this.searchImage(imageId);
+        const imageSub = await this.imageRepository.findOneOrFail(subcategory.image.id);
+        if (subcategory.image.filepath !== image.filepath) {
+            await this.imageRepository.remove(imageSub);
+            await deletePhoto(subcategory.image.filepath);
         }
         await this.subcategoryRepository.update(subcategoryID, {
             name,
-            imagePath,
+            image,
         });
         subcategory = await this.subcategoryRepository.findOneOrFail(subcategoryID);
         return subcategory;
@@ -75,7 +91,7 @@ export class SubCategoryService {
         if (!subcategory) {
             throw new HttpException('No se encontró la categoría', HttpStatus.NOT_FOUND);
         }
-        await deletePhoto(subcategory.imagePath);
+        await deletePhoto(subcategory.image.filepath);
         await this.subcategoryRepository.delete(subcategoryID);
         return subcategory;
     }

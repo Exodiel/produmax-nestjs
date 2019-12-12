@@ -1,8 +1,9 @@
 import { UserR } from '../user/user.dto';
 import { UserRO } from '../user/user.dto';
 import { AuthService } from './auth.service';
-import { Controller, Post, Body, Res, HttpStatus, Get, Req } from '@nestjs/common';
+import { Controller, Post, Body, Res, HttpStatus, Get, Req, UseGuards, Query, Delete } from '@nestjs/common';
 import { Response, Request } from 'express';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('auth')
 export class AuthController {
@@ -20,9 +21,9 @@ export class AuthController {
         return res.status(HttpStatus.OK).json(user);
     }
 
-    @Get('/logout')
-    async logout(@Res() res: Response, @Req() req: Request) {
-        req.logout();
+    @Delete('/logout')
+    async logout(@Res() res: Response, @Req() req: Request, @Query('sessionId') sessionId: string) {
+        await this.authService.destroySession(sessionId);
         return res.status(HttpStatus.ACCEPTED).json({ message: 'Cerraste sesión' });
     }
 }

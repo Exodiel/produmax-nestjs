@@ -5,12 +5,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Category } from './category.entity';
 import { JwtMiddleware } from '../middlewares/jwt.middlware';
 import { RolMiddleware } from '../middlewares/rol.middleware';
+import { Image } from '../image/image.entity';
+import { ImageService } from '../image/image.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Category])],
+  imports: [TypeOrmModule.forFeature([Category, Image])],
   controllers: [CategoryController],
-  providers: [CategoryService],
-  exports: [CategoryModule],
+  providers: [CategoryService, ImageService],
+  exports: [CategoryService],
 })
 export class CategoryModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
@@ -24,6 +26,7 @@ export class CategoryModule implements NestModule {
         { path: 'categories/update', method: RequestMethod.PUT },
         { path: 'categories/delete', method: RequestMethod.DELETE },
         { path: 'categories/', method: RequestMethod.POST },
+        { path: 'categories/search-by-name', method: RequestMethod.GET },
         { path: 'categories/counter', method: RequestMethod.GET },
       );
   }

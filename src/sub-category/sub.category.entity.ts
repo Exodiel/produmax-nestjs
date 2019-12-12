@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'ty
 import { IsString } from 'class-validator';
 import { Category } from '../category/category.entity';
 import { Product } from '../product/product.entity';
+import { Image } from '../image/image.entity';
 
 @Entity('subcategory')
 export class SubCategory {
@@ -15,16 +16,12 @@ export class SubCategory {
     @IsString()
     name: string;
 
-    @Column({
-        type: 'varchar',
-        length: '100',
-    })
-    @IsString()
-    imagePath: string;
-
     @OneToMany(type => Product, products => products.subcategory)
     products: Product[];
 
     @ManyToOne(type => Category, category => category.subcategories)
     category: Category;
+
+    @ManyToOne(type => Image, image => image.subcategories)
+    image: Image;
 }

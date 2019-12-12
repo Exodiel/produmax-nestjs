@@ -44,7 +44,7 @@ export class SubCategoryController {
     @Post('/')
     async createSubCategory(@Res() res: Response, @Body() subcategoryDTO: SubCategoryDTO) {
         const subcategory = await this.subCategoryService.createSubcategory(subcategoryDTO);
-        res.status(HttpStatus.OK).json({
+        res.status(HttpStatus.CREATED).json({
             message: 'SubCategoría creada',
         });
     }
