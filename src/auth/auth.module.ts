@@ -9,19 +9,17 @@ import { RolModule } from '../rol/rol.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../user/user.entity';
 import { Rol } from '../rol/rol.entity';
-import { Image } from '../image/image.entity';
 import { JwtMiddleware } from '../middlewares/jwt.middlware';
 import { AppGateway } from '../app.gateway';
 import { ConfigModule } from '../config/config.module';
 import { ConfigService } from '../config/config.service';
 import { UserService } from '../user/user.service';
 import { RolService } from '../rol/rol.service';
-import { ImageService } from '../image/image.service';
 import { Session } from '../session/session.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Rol, Image, Session]),
+    TypeOrmModule.forFeature([User, Rol, Session]),
     PassportModule.register({ defaultStrategy: 'jwt', session: false }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -34,7 +32,7 @@ import { Session } from '../session/session.entity';
     UserModule,
     RolModule,
   ],
-  providers: [AuthService, JwtStrategy, UserService, RolService, ImageService, AppGateway],
+  providers: [AuthService, JwtStrategy, UserService, RolService, AppGateway],
   controllers: [AuthController],
 })
 export class AuthModule implements NestModule {

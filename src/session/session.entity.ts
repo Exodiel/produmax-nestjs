@@ -25,9 +25,10 @@ export class Session  {
   expiresAt: number;
 
   @Column({
-    type: 'int',
+    type: 'varchar',
+    length: 30,
   })
-  lastActivity: number;
+  lastActivity: string;
 
   @ManyToOne(type => User, user => user.sessions)
   user: User;

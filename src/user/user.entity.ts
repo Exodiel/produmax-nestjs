@@ -3,7 +3,6 @@ import { IsString, Length, IsEmail } from 'class-validator';
 import { Rol } from '../rol/rol.entity';
 import * as bcrypt from 'bcrypt';
 import { Order } from '../order/order.entity';
-import { Image } from '../image/image.entity';
 import { Session } from '../session/session.entity';
 
 @Entity('user')
@@ -62,14 +61,17 @@ export class User {
     })
     phone: string;
 
+    @Column({
+        type: 'varchar',
+        length: 55,
+    })
+    imageUrl: string;
+
     @ManyToOne(type => Rol, rol => rol.users)
     rol: Rol;
 
     @OneToMany(type => Order, order => order.user)
     orders: Order[];
-
-    @ManyToOne(type => Image, image => image.users)
-    image: Image;
 
     @OneToMany(type => Session, session => session.user)
     sessions: Session[];

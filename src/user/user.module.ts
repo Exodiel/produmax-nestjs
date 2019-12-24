@@ -5,16 +5,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './user.entity';
 import { Rol } from '../rol/rol.entity';
 import { RolService } from '../rol/rol.service';
-import { Image } from '../image/image.entity';
 import { JwtMiddleware } from '../middlewares/jwt.middlware';
 import { AppGateway } from '../app.gateway';
 import { RolMiddleware } from '../middlewares/rol.middleware';
-import { ImageService } from '../image/image.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Rol, Image])],
+  imports: [TypeOrmModule.forFeature([User, Rol])],
   controllers: [UserController],
-  providers: [UserService, RolService, ImageService, AppGateway],
+  providers: [UserService, RolService, AppGateway],
   exports: [UserService],
 })
 export class UserModule implements NestModule {

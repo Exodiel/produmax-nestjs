@@ -1,6 +1,5 @@
 import { SubCategory } from '../sub-category/sub.category.entity';
 import { PrimaryGeneratedColumn, Column, Entity, OneToMany, ManyToOne } from 'typeorm';
-import { Image } from '../image/image.entity';
 
 @Entity('category')
 export class Category {
@@ -13,9 +12,12 @@ export class Category {
     })
     name: string;
 
+    @Column({
+        type: 'varchar',
+        length: 55,
+    })
+    imageUrl: string;
+
     @OneToMany(type => SubCategory, subcategory => subcategory.category)
     subcategories: SubCategory[];
-
-    @ManyToOne(type => Image, image => image.categories)
-    image: Image;
 }

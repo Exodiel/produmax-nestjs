@@ -6,13 +6,11 @@ import { SubCategory } from './sub.category.entity';
 import { JwtMiddleware } from '../middlewares/jwt.middlware';
 import { RolMiddleware } from '../middlewares/rol.middleware';
 import { CategoryModule } from '../category/category.module';
-import { Image } from '../image/image.entity';
-import { ImageService } from '../image/image.service';
 
 @Module({
-  imports: [CategoryModule, TypeOrmModule.forFeature([SubCategory, Image])],
+  imports: [CategoryModule, TypeOrmModule.forFeature([SubCategory])],
   controllers: [SubCategoryController],
-  providers: [SubCategoryService, ImageService],
+  providers: [SubCategoryService],
   exports: [SubCategoryService],
 })
 export class SubCategoryModule implements NestModule {

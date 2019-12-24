@@ -5,13 +5,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Category } from './category.entity';
 import { JwtMiddleware } from '../middlewares/jwt.middlware';
 import { RolMiddleware } from '../middlewares/rol.middleware';
-import { Image } from '../image/image.entity';
-import { ImageService } from '../image/image.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Category, Image])],
+  imports: [TypeOrmModule.forFeature([Category])],
   controllers: [CategoryController],
-  providers: [CategoryService, ImageService],
+  providers: [CategoryService],
   exports: [CategoryService],
 })
 export class CategoryModule implements NestModule {

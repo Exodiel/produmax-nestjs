@@ -60,12 +60,14 @@ export class AuthService {
         const payload = { email: user.email, id: user.id, rol: rol.name };
         const payloadString = JSON.stringify(payload);
         const token = this.jwtService.sign(payload);
-        const session = this.sessionRepository.create({ payload: payloadString, token, expiresAt: EXPIRES_IN, user, lastActivity: Date.now() });
+        const lastActivity = new Date().toString().substr(0, 24);
+        // tslint:disable-next-line:max-line-length
+        const session = this.sessionRepository.create({ payload: payloadString, token, expiresAt: EXPIRES_IN, user, lastActivity });
         await this.sessionRepository.save(session);
         return {
             access_token: token,
             type,
-            EXPIRES_IN,
+            expires_in: EXPIRES_IN,
             sessionId: session.sessionId,
             user,
         };
@@ -119,7 +121,8 @@ export class AuthService {
         const payload = { email: user.email, id: user.id, rol: rol.name };
         const payloadString = JSON.stringify(payload);
         const token = this.jwtService.sign(payload);
-        const session = this.sessionRepository.create({ payload: payloadString, token, expiresAt: EXPIRES_IN, user, lastActivity: Date.now()});
+        const lastActivity = new Date().toString().substr(0, 24);
+        const session = this.sessionRepository.create({ payload: payloadString, token, expiresAt: EXPIRES_IN, user, lastActivity});
         await this.sessionRepository.save(session);
         return {
             access_token: token,

@@ -7,7 +7,6 @@ import { User } from './user.entity';
 import { Repository, getRepository } from 'typeorm';
 import { Rol } from '../rol/rol.entity';
 import { AppGateway } from '../app.gateway';
-import { Image } from '../image/image.entity';
 import { deletePhoto } from '../utils/file-uploading';
 
 @Injectable()
@@ -17,18 +16,16 @@ export class UserService {
         private readonly userRepository: Repository<User>,
         @InjectRepository(Rol)
         private readonly rolRepository: Repository<Rol>,
-        @InjectRepository(Image)
-        private readonly imageRepository: Repository<Image>,
         private gateway: AppGateway,
     ) {}
 
     async getUsers(): Promise<User[]> {
-        const users = await this.userRepository.find({ relations: ['rol', 'image'] });
+        const users = await this.userRepository.find({ relations: ['rol'] });
         return users;
     }
 
     async getUser(userId: number): Promise<User> {
-        const user = await this.userRepository.findOne({ where: { id: userId }, relations: ['rol', 'image'] });
+        const user = await this.userRepository.findOne({ where: { id: userId }, relations: ['rol'] });
         if (!user) {
             throw new NotFoundException('No se encontró el usuario');
         }
@@ -36,7 +33,7 @@ export class UserService {
     }
 
     async getUserCI(userCi: string): Promise<User> {
-        const user = await this.userRepository.findOne({ where: { ci: userCi }, relations: ['rol', 'image'] });
+        const user = await this.userRepository.findOne({ where: { ci: userCi }, relations: ['rol'] });
         if (!user) {
             throw new NotFoundException('No se encontró el usuario');
         }
@@ -52,28 +49,18 @@ export class UserService {
     }
 
     async createUser(userDTO: UserDTO): Promise<User> {
-        const {ci, name, lastname, birthdate, email, password, phone, rolId, imageId } = userDTO;
+        const {ci, name, lastname, birthdate, email, password, phone, rolId, imageUrl } = userDTO;
         let user = await this.userRepository.findOne({ where: { email } });
         if (user) {
             throw new HttpException('El usuario ya existe', HttpStatus.BAD_REQUEST);
         }
         const rol = await this.searchRol(rolId);
-        const image = await this.searchImage(imageId);
-        user = this.userRepository.create({ ci, name, lastname, birthdate, email, password, phone, rol, image });
+        user = this.userRepository.create({ ci, name, lastname, birthdate, email, password, phone, rol, imageUrl });
         await this.userRepository.save(user);
         const lastUser = await this.getLastUser();
         const counter = await this.getCountUsers();
         this.gateway.wss.emit('countUsers', counter);
         return lastUser;
-    }
-
-    private async searchImage(imageId: number): Promise<Image> {
-        const image = await this.imageRepository.findOne({ where: { id: imageId } });
-        if (!image) {
-            throw new NotFoundException('No se encontró la imagen');
-        }
-
-        return image;
     }
 
     private async searchRol(rolId: number): Promise<Rol> {
@@ -107,7 +94,7 @@ export class UserService {
         if (!user) {
             throw new HttpException('El usuario no se encontró', HttpStatus.BAD_REQUEST);
         }
-        await deletePhoto(user.image.filepath);
+        await deletePhoto(user.imageUrl);
         await this.userRepository.delete(userId);
         const counter = await this.getCountUsers();
         this.gateway.wss.emit('countUsers', counter);
@@ -115,25 +102,23 @@ export class UserService {
     }
 
     async updateUser(userId: number, userDTO: UserDTO): Promise<User> {
-        const {ci, name, lastname, birthdate, email, phone, rolId, imageId } = userDTO;
+        const {ci, name, lastname, birthdate, email, phone, rolId, imageUrl } = userDTO;
         let user = await this.userRepository.findOne({where: { id: userId }});
         if (!user) {
             throw new HttpException('No se encontró el usuario', HttpStatus.NOT_FOUND);
         }
         const rol = await this.searchRol(rolId);
-        const image = await this.searchImage(imageId);
-        const imageUser = await this.imageRepository.findOneOrFail(user.image.id);
-        if (user.image.filepath !== image.filepath) {
-            await this.imageRepository.remove(imageUser);
-            await deletePhoto(user.image.filepath);
+        if (user.imageUrl !== imageUrl) {
+            await deletePhoto(user.imageUrl);
         }
         await getRepository(User)
             .createQueryBuilder('user')
             .update(User)
-            .set({ ci, name, lastname, birthdate, email, phone, rol, image })
+            .set({ ci, name, lastname, birthdate, email, phone, rol, imageUrl })
             .where('user.id = :id', { id: userId })
             .execute();
         user = await this.userRepository.findOne({ where: { id: userId } });
+
         return user;
     }
 

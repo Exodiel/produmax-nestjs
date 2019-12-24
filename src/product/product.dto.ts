@@ -21,5 +21,5 @@ export class ProductDTO {
     weight: number;
     unitId: number;
     subcategoryId: number;
-    imageId: number;
+    imageUrl: string;
 }
