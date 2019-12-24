@@ -127,7 +127,7 @@ export class AuthService {
         return {
             access_token: token,
             type,
-            EXPIRES_IN,
+            expires_in: EXPIRES_IN,
             sessionId: session.sessionId,
             user,
         };
