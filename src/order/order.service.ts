@@ -3,7 +3,7 @@ import { Product } from '../product/product.entity';
 import { Injectable, NotFoundException, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Order } from './order.entity';
-import { Repository, getRepository, getConnection } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { OrderDTO } from './order.dto';
 import { User } from '../user/user.entity';
 import { AppGateway } from '../app.gateway';
@@ -13,6 +13,7 @@ export class OrderService {
     constructor(
         @InjectRepository(Order)
         private readonly orderRepository: Repository<Order>,
+        private dataSource: DataSource,
         private gateway: AppGateway,
     ) {}
 
@@ -64,7 +65,7 @@ export class OrderService {
     }
 
     private async createDetail(price: number, quantity: number, order: Order, product: Product) {
-        await getRepository(Details)
+        await this.dataSource.getRepository(Details)
             .createQueryBuilder()
             .insert()
             .into(Details)
@@ -78,7 +79,7 @@ export class OrderService {
     }
 
     private async getProductFromDetail(productID: number): Promise<Product> {
-        const product = await getRepository(Product)
+        const product = await this.dataSource.getRepository(Product)
                 .createQueryBuilder('product')
                 .where('product.id = :id', { id: productID })
                 .getOne();
@@ -90,7 +91,7 @@ export class OrderService {
     }
 
     private async getUser(userId: number): Promise<User> {
-        const user = await getRepository(User)
+        const user = await this.dataSource.getRepository(User)
             .createQueryBuilder('user')
             .where('user.id = :id', {id: userId})
             .getOne();
@@ -102,7 +103,7 @@ export class OrderService {
     }
 
     private async searchLastOrder() {
-        const order = await getRepository(Order)
+        const order = await this.dataSource.getRepository(Order)
             .createQueryBuilder('order')
             .orderBy('order.id', 'DESC')
             .limit(1)
@@ -112,7 +113,7 @@ export class OrderService {
     }
 
     async getAmount() {
-        const amount = await getRepository(Order)
+        const amount = await this.dataSource.getRepository(Order)
             .createQueryBuilder('order')
             .select('SUM(total) as amount')
             .where('order.state = :state', { state: 'vendido' })
@@ -122,7 +123,7 @@ export class OrderService {
     }
 
     async getCountOrders() {
-        const count = await getRepository(Order)
+        const count = await this.dataSource.getRepository(Order)
             .createQueryBuilder('order')
             .select('COUNT(*) as counter')
             .where('order.state = :state', { state: 'procesando' })
@@ -132,7 +133,7 @@ export class OrderService {
     }
 
     async getCountOrdersSell() {
-        const count = await getRepository(Order)
+        const count = await this.dataSource.getRepository(Order)
             .createQueryBuilder('order')
             .select('COUNT(*) as counter')
             .where('order.state = :state', { state: 'vendido' })
@@ -142,7 +143,7 @@ export class OrderService {
     }
 
     async getCountOrdersCancel() {
-        const count = await getRepository(Order)
+        const count = await this.dataSource.getRepository(Order)
             .createQueryBuilder('order')
             .select('COUNT(*) as counter')
             .where('order.state = :state', { state: 'cancelado' })
@@ -154,7 +155,7 @@ export class OrderService {
     async updateStateOrder(orderID: number, newState: string) {
         await this.searchOrder(orderID);
 
-        await getConnection()
+        await this.dataSource
             .createQueryBuilder()
             .update(Order)
             .set({ state: newState })
@@ -170,7 +171,7 @@ export class OrderService {
     }
 
     private async searchOrder(orderId: number): Promise<Order> {
-        const or = await getRepository(Order)
+        const or = await this.dataSource.getRepository(Order)
             .createQueryBuilder('order')
             .where('order.id = :id', { id: orderId })
             .getOne();

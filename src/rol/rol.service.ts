@@ -14,7 +14,7 @@ export class RolService {
     }
 
     async getRol(rolId: number): Promise<Rol> {
-        const rol = await this.rolRepository.findOneOrFail(rolId);
+        const rol = await this.rolRepository.findOneByOrFail({ id: rolId });
         return rol;
     }
 
@@ -39,7 +39,7 @@ export class RolService {
             throw new HttpException('No se encontró la unidad', HttpStatus.NOT_FOUND);
         }
         await this.rolRepository.update({id: rolId}, rolDTO);
-        rol = await this.rolRepository.findOneOrFail({ id: rolId });
+        rol = await this.rolRepository.findOneByOrFail({ id: rolId });
         return rol;
     }
 }

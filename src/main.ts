@@ -28,6 +28,7 @@ async function bootstrap() {
       index: false,
     },
   );
+  
   await app.listen(port);
 }
 bootstrap();

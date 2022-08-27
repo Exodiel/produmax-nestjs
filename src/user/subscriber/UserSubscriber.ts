@@ -1,9 +1,13 @@
-import {EventSubscriber, EntitySubscriberInterface, InsertEvent} from 'typeorm';
+import {EventSubscriber, EntitySubscriberInterface, DataSource, InsertEvent} from 'typeorm';
 import { User } from '../user.entity';
 import bcrypt from 'bcrypt';
 
 @EventSubscriber()
 export class UserSubscriber implements EntitySubscriberInterface<User> {
+    // constructor(dataSource: DataSource) {
+    //     dataSource.subscribers.push(this);
+    // }
+
     listenTo() {
         return User;
     }

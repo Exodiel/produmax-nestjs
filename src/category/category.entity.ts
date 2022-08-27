@@ -1,5 +1,5 @@
 import { SubCategory } from '../sub-category/sub.category.entity';
-import { PrimaryGeneratedColumn, Column, Entity, OneToMany, ManyToOne } from 'typeorm';
+import { PrimaryGeneratedColumn, Column, Entity, OneToMany } from 'typeorm';
 
 @Entity('category')
 export class Category {
@@ -18,6 +18,6 @@ export class Category {
     })
     imageUrl: string;
 
-    @OneToMany(type => SubCategory, subcategory => subcategory.category)
+    @OneToMany(() => SubCategory, subcategory => subcategory.category)
     subcategories: SubCategory[];
 }

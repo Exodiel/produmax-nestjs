@@ -14,12 +14,12 @@ export class UnitService {
     }
 
     async getUnit(id: number): Promise<Unit> {
-        const unit = await this.unitRepository.findOneOrFail(id);
+        const unit = await this.unitRepository.findOneByOrFail({id});
         return unit;
     }
 
     async getUnitByName(unitName: string): Promise<Unit> {
-        const unit = await this.unitRepository.findOne({ name: unitName});
+        const unit = await this.unitRepository.findOneBy({ name: unitName});
         if (!unit) {
             throw new NotFoundException('No se encontró la unidad');
         }
@@ -32,22 +32,22 @@ export class UnitService {
     }
 
     async updateUnit(unitId: number, unitDTO: UnitDTO): Promise<Unit> {
-        let unit = await this.unitRepository.findOneOrFail({ id: unitId });
+        let unit = await this.unitRepository.findOneByOrFail({ id: unitId });
         if (!unit) {
             throw new HttpException('No se encontró la unidad', HttpStatus.NOT_FOUND);
         }
         await this.unitRepository.update({id: unitId}, unitDTO);
-        unit = await this.unitRepository.findOneOrFail({ id: unitId });
+        unit = await this.unitRepository.findOneByOrFail({ id: unitId });
         return unit;
     }
 
     async deleteUnit(unitId: number): Promise<any> {
-        let unit = await this.unitRepository.findOneOrFail({ id: unitId });
+        let unit = await this.unitRepository.findOneByOrFail({ id: unitId });
         if (!unit) {
             throw new HttpException('No se encontró la unidad', HttpStatus.NOT_FOUND);
         }
         await this.unitRepository.delete({id: unitId});
-        unit = await this.unitRepository.findOneOrFail({ id: unitId });
+        unit = await this.unitRepository.findOneByOrFail({ id: unitId });
         return unit;
     }
 }

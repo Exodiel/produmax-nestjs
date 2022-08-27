@@ -11,8 +11,6 @@ import { User } from '../user/user.entity';
 import { Rol } from '../rol/rol.entity';
 import { JwtMiddleware } from '../middlewares/jwt.middlware';
 import { AppGateway } from '../app.gateway';
-import { ConfigModule } from '../config/config.module';
-import { ConfigService } from '../config/config.service';
 import { UserService } from '../user/user.service';
 import { RolService } from '../rol/rol.service';
 import { Session } from '../session/session.entity';
@@ -21,13 +19,9 @@ import { Session } from '../session/session.entity';
   imports: [
     TypeOrmModule.forFeature([User, Rol, Session]),
     PassportModule.register({ defaultStrategy: 'jwt', session: false }),
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => ({
-        secret: configService.jwtSecret,
-        signOptions: { expiresIn: configService.expiresIn },
-      }),
+    JwtModule.register({
+      secret: process.env.JWT_SECRET,
+      signOptions: { expiresIn: process.env.EXPIRES_IN },
     }),
     UserModule,
     RolModule,

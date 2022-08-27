@@ -4,12 +4,11 @@ import { Injectable, HttpException, HttpStatus, NotFoundException } from '@nestj
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../user/user.entity';
-import { Repository, getRepository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Rol } from '../rol/rol.entity';
 import { AppGateway } from '../app.gateway';
 import { Session } from '../session/session.entity';
-import { EXPIRES_IN } from '../constants/constant';
 
 @Injectable()
 export class AuthService {
@@ -22,10 +21,11 @@ export class AuthService {
         @InjectRepository(Session)
         private readonly sessionRepository: Repository<Session>,
         private gateway: AppGateway,
+        private dataSource: DataSource
     ) {}
 
     async getCountUsers() {
-        const count = await getRepository(User)
+        const count = await this.dataSource.getRepository(User)
             .createQueryBuilder('user')
             .select('COUNT(*) as count')
             .groupBy('user.id')
@@ -36,7 +36,7 @@ export class AuthService {
 
     async login(userRO: UserRO) {
         const { email, password } = userRO;
-        const user = await getRepository(User)
+        const user = await this.dataSource.getRepository(User)
             .createQueryBuilder('user')
             .addSelect('user.password')
             .leftJoinAndSelect('user.rol', 'rol')
@@ -60,21 +60,21 @@ export class AuthService {
         const payload = { email: user.email, id: user.id, rol: rol.name };
         const payloadString = JSON.stringify(payload);
         const token = this.jwtService.sign(payload);
-        const lastActivity = new Date().toString().substr(0, 24);
+        const lastActivity = new Date().toString().substring(0, 24);
         // tslint:disable-next-line:max-line-length
-        const session = this.sessionRepository.create({ payload: payloadString, token, expiresAt: EXPIRES_IN, user, lastActivity });
+        const session = this.sessionRepository.create({ payload: payloadString, token, expiresAt: +process.env.EXPIRES_IN, user, lastActivity });
         await this.sessionRepository.save(session);
         return {
             access_token: token,
             type,
-            expires_in: EXPIRES_IN,
+            expires_in: +process.env.EXPIRES_IN,
             sessionId: session.sessionId,
             user,
         };
     }
 
     private async searchUserRolType(email: string): Promise<Rol> {
-        const rol = await getRepository(Rol)
+        const rol = await this.dataSource.getRepository(Rol)
             .createQueryBuilder('rol')
             .select('rol.name')
             .leftJoinAndSelect(User, 'user', 'user.rolId = rol.id')
@@ -121,20 +121,20 @@ export class AuthService {
         const payload = { email: user.email, id: user.id, rol: rol.name };
         const payloadString = JSON.stringify(payload);
         const token = this.jwtService.sign(payload);
-        const lastActivity = new Date().toString().substr(0, 24);
-        const session = this.sessionRepository.create({ payload: payloadString, token, expiresAt: EXPIRES_IN, user, lastActivity});
+        const lastActivity = new Date().toString().substring(0, 24);
+        const session = this.sessionRepository.create({ payload: payloadString, token, expiresAt: +process.env.EXPIRES_IN, user, lastActivity});
         await this.sessionRepository.save(session);
         return {
             access_token: token,
             type,
-            expires_in: EXPIRES_IN,
+            expires_in: +process.env.EXPIRES_IN,
             sessionId: session.sessionId,
             user,
         };
     }
 
     async destroySession(sessionId: string) {
-        const session = await this.sessionRepository.findOne(sessionId);
+        const session = await this.sessionRepository.findOneBy({ sessionId });
         if (!session) {
             throw new NotFoundException('No existe sesión');
         }
@@ -142,7 +142,7 @@ export class AuthService {
     }
 
     private async searchUserByEmail(email: string): Promise<any> {
-        const user = await this.userRepository.findOne({ where: { email } });
+        const user = await this.userRepository.findOneBy({ email });
         if (user) {
             throw new HttpException('El usuario ya existe', HttpStatus.BAD_REQUEST);
         }

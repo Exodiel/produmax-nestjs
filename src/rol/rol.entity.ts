@@ -15,6 +15,6 @@ export class Rol {
     @Length(1, 20)
     name: string;
 
-    @OneToMany(type => User, user => user.rol)
+    @OneToMany(() => User, user => user.rol)
     users: User[];
 }

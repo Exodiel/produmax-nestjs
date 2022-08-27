@@ -30,6 +30,6 @@ export class Session  {
   })
   lastActivity: string;
 
-  @ManyToOne(type => User, user => user.sessions)
+  @ManyToOne(() => User, user => user.sessions)
   user: User;
 }

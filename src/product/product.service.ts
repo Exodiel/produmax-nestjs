@@ -4,7 +4,7 @@ import { ProductDTO } from './product.dto';
 import { Injectable, HttpException, HttpStatus, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './product.entity';
-import { Repository, getRepository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { SubCategory } from '../sub-category/sub.category.entity';
 import { deletePhoto } from '../utils/file-uploading';
 
@@ -18,6 +18,7 @@ export class ProductService {
         @InjectRepository(Unit)
         private readonly unitRepository: Repository<Unit>,
         private gateway: AppGateway,
+        private dataSource: DataSource,
     ) {}
 
     async getProducts(): Promise<Product[]> {
@@ -26,12 +27,12 @@ export class ProductService {
     }
 
     async getProduct(id: number): Promise<Product> {
-        const product = await this.productRepository.findOneOrFail(id);
+        const product = await this.productRepository.findOneByOrFail({id});
         return product;
     }
 
     async getProductByName(productName: string): Promise<Product[]> {
-        const products = await getRepository(Product)
+        const products = await this.dataSource.getRepository(Product)
             .createQueryBuilder('products')
             .where('products.name like :name', { name: '%' + productName + '%' })
             .getMany();
@@ -55,7 +56,7 @@ export class ProductService {
     }
 
     async getCountProducts() {
-        const count = await getRepository(Product)
+        const count = await this.dataSource.getRepository(Product)
             .createQueryBuilder('product')
             .select('COUNT(id) as counter')
             .getRawOne();
@@ -64,7 +65,7 @@ export class ProductService {
     }
 
     async getLastProduct() {
-        const product = await getRepository(Product)
+        const product = await this.dataSource.getRepository(Product)
             .createQueryBuilder('product')
             .orderBy('product.id', 'DESC')
             .limit(1)
@@ -73,7 +74,7 @@ export class ProductService {
     }
 
     async deleteProduct(productId: number): Promise<any> {
-        const product = await this.productRepository.findOneOrFail(productId, { relations: ['image'] });
+        const product = await this.productRepository.findOneOrFail({  where: { id: productId }, relations: ['image'] });
         if (!product) {
             throw new HttpException('No se encontró la unidad', HttpStatus.NOT_FOUND);
         }
@@ -127,7 +128,7 @@ export class ProductService {
     }
 
     async searchUnit(productId: number): Promise<Unit> {
-        const unit = await getRepository(Unit)
+        const unit = await this.dataSource.getRepository(Unit)
             .createQueryBuilder('unit')
             .innerJoin('unit.products', 'product', 'product.id = :id', { id: productId })
             .getOne();
@@ -139,7 +140,7 @@ export class ProductService {
     }
 
     async searchSubCategory(productId: number): Promise<SubCategory> {
-        const subcategory = await getRepository(SubCategory)
+        const subcategory = await this.dataSource.getRepository(SubCategory)
             .createQueryBuilder('subcategory')
             .innerJoin('subcategory.products', 'product')
             .where('product.id = :id', { id:  productId})

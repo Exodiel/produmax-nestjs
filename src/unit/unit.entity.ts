@@ -21,6 +21,6 @@ export class Unit {
     @Length(1, 20)
     symbol: string;
 
-    @OneToMany(type => Product, product => product.unit)
+    @OneToMany(() => Product, product => product.unit)
     products: Product[];
 }

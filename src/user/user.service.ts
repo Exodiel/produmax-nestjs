@@ -4,7 +4,7 @@ import { Injectable, NotFoundException, HttpException, HttpStatus } from '@nestj
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from './user.entity';
-import { Repository, getRepository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Rol } from '../rol/rol.entity';
 import { AppGateway } from '../app.gateway';
 import { deletePhoto } from '../utils/file-uploading';
@@ -17,6 +17,7 @@ export class UserService {
         @InjectRepository(Rol)
         private readonly rolRepository: Repository<Rol>,
         private gateway: AppGateway,
+        private dataSource: DataSource,
     ) {}
 
     async getUsers(): Promise<User[]> {
@@ -41,7 +42,7 @@ export class UserService {
     }
 
     async getOrdersRelationated(userId: number) {
-        const orders = await getRepository(Order)
+        const orders = await this.dataSource.getRepository(Order)
             .createQueryBuilder('order')
             .innerJoin('order.user', 'user', 'user.id = :id', { id: userId })
             .getMany();
@@ -64,7 +65,7 @@ export class UserService {
     }
 
     private async searchRol(rolId: number): Promise<Rol> {
-        const rol = await this.rolRepository.findOne({ id: rolId });
+        const rol = await this.rolRepository.findOneBy({ id: rolId });
         if (!rol) {
             throw new HttpException('No se encontró el rol', HttpStatus.NOT_FOUND);
         }
@@ -72,7 +73,7 @@ export class UserService {
     }
 
     async getLastUser() {
-        const user = await getRepository(User)
+        const user = await this.dataSource.getRepository(User)
             .createQueryBuilder('user')
             .orderBy('user.id', 'DESC')
             .limit(1)
@@ -81,7 +82,7 @@ export class UserService {
     }
 
     async getCountUsers() {
-        const count = await getRepository(User)
+        const count = await this.dataSource.getRepository(User)
             .createQueryBuilder('user')
             .select('COUNT(id) as counter')
             .getRawOne();
@@ -90,7 +91,7 @@ export class UserService {
     }
 
     async deleteUser(userId: number): Promise<any> {
-        const user = await this.userRepository.findOne({ id: userId });
+        const user = await this.userRepository.findOneBy({ id: userId });
         if (!user) {
             throw new HttpException('El usuario no se encontró', HttpStatus.BAD_REQUEST);
         }
@@ -111,7 +112,7 @@ export class UserService {
         if (user.imageUrl !== imageUrl) {
             await deletePhoto(user.imageUrl);
         }
-        await getRepository(User)
+        await this.dataSource.getRepository(User)
             .createQueryBuilder('user')
             .update(User)
             .set({ ci, name, lastname, birthdate, email, phone, rol, imageUrl })
@@ -123,7 +124,7 @@ export class UserService {
     }
 
     async updatePassword(password: string, userId: number) {
-        const user = await this.userRepository.findOne(userId);
+        const user = await this.userRepository.findOneBy({id: userId});
         if (!user) {
             throw new HttpException('No se encontró el usuario', HttpStatus.NOT_FOUND);
         }

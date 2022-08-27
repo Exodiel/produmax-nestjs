@@ -50,12 +50,12 @@ export class Product {
     })
     imageUrl: string;
 
-    @ManyToOne(type => Unit, unit => unit.products)
+    @ManyToOne(() => Unit, unit => unit.products)
     unit: Unit;
 
-    @ManyToOne(type => SubCategory, subcategory => subcategory.products)
+    @ManyToOne(() => SubCategory, subcategory => subcategory.products)
     subcategory: SubCategory;
 
-    @OneToMany(type => Details, (details) => details.product)
+    @OneToMany(() => Details, (details) => details.product)
     details: Details[];
 }

@@ -61,10 +61,10 @@ export class Order {
         this.state = 'procesando';
     }
 
-    @ManyToOne(type => User, user => user.orders)
+    @ManyToOne(() => User, user => user.orders)
     user: User;
 
-    @OneToMany(type => Details, (details) => details.order)
+    @OneToMany(() => Details, (details) => details.order)
     details: Details[];
 
 }

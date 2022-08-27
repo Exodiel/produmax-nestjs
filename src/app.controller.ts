@@ -7,7 +7,7 @@ import { diskStorage } from 'multer';
 
 @Controller('app')
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(private readonly appService: AppService) { }
   @Get('/test')
   getHello(@Res() res: Response, @Req() req: Request) {
     const hello = this.appService.getHello();
@@ -19,18 +19,18 @@ export class AppController {
   @Post('/upload')
   @UseInterceptors(FileInterceptor('image', {
     limits: {
-        fileSize: 1 * 1000 * 1000,
+      fileSize: 1 * 1000 * 1000,
     },
     fileFilter: imageFileFilter,
     storage: diskStorage({
-        destination: './uploads',
-        filename: editFileName,
+      destination: './uploads',
+      filename: editFileName,
     }),
   }))
-  async uploadPhoto( @UploadedFile() file, @Res() res: Response) {
+  async uploadPhoto(@UploadedFile() file, @Res() res: Response) {
 
-  return res.status(HttpStatus.CREATED).json({
-    filepath: file.path,
-  });
-}
+    return res.status(HttpStatus.CREATED).json({
+      filepath: file.path,
+    });
+  }
 }

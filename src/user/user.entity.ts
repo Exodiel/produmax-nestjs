@@ -67,13 +67,13 @@ export class User {
     })
     imageUrl: string;
 
-    @ManyToOne(type => Rol, rol => rol.users)
+    @ManyToOne(() => Rol, rol => rol.users)
     rol: Rol;
 
-    @OneToMany(type => Order, order => order.user)
+    @OneToMany(() => Order, order => order.user)
     orders: Order[];
 
-    @OneToMany(type => Session, session => session.user)
+    @OneToMany(() => Session, session => session.user)
     sessions: Session[];
 
     async comparePassword(attempt: string): Promise<boolean> {

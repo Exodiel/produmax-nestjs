@@ -1,7 +1,7 @@
 import { CategoryDTO } from './category.dto';
-import { Injectable, HttpException, HttpStatus, NotFoundException } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, getRepository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Category } from './category.entity';
 import { deletePhoto } from '../utils/file-uploading';
 
@@ -10,6 +10,7 @@ export class CategoryService {
     constructor(
         @InjectRepository(Category)
         private readonly categoryRepository: Repository<Category>,
+        private dataSource: DataSource
     ) {}
 
     async getCategories(): Promise<Category[]> {
@@ -18,12 +19,12 @@ export class CategoryService {
     }
 
     async getCategory(categoryId: number): Promise<Category> {
-        const category = await this.categoryRepository.findOneOrFail(categoryId);
+        const category = await this.categoryRepository.findOneByOrFail({ id: categoryId });
         return category;
     }
 
     async getCategoryByName(name: string): Promise<Category> {
-        const category = await this.categoryRepository.findOneOrFail({ name });
+        const category = await this.categoryRepository.findOneByOrFail({ name });
         return category;
     }
 
@@ -35,7 +36,7 @@ export class CategoryService {
     }
 
     async deleteCategory(categoryId: number): Promise<Category> {
-        const category = await this.categoryRepository.findOneOrFail({ id: categoryId });
+        const category = await this.categoryRepository.findOneByOrFail({ id: categoryId });
         if (!category) {
             throw new HttpException('No se encontró la categoría', HttpStatus.NOT_FOUND);
         }
@@ -45,7 +46,7 @@ export class CategoryService {
     }
 
     async updateCategory(categoryId: number, categoryDTO: Partial<CategoryDTO>): Promise<Category> {
-        let category = await this.categoryRepository.findOneOrFail(categoryId);
+        let category = await this.categoryRepository.findOneByOrFail({ id: categoryId });
         if (!category) {
             throw new HttpException('No se encontró la categoría', HttpStatus.NOT_FOUND);
         }
@@ -59,12 +60,12 @@ export class CategoryService {
                 imageUrl,
             },
         );
-        category = await this.categoryRepository.findOneOrFail(categoryId);
+        category = await this.categoryRepository.findOneByOrFail({ id: categoryId });
         return category;
     }
 
     async getCountCategories() {
-        const count = await getRepository(Category)
+        const count = await this.dataSource.getRepository(Category)
             .createQueryBuilder('category')
             .select('COUNT(id) as counter')
             .getRawOne();
