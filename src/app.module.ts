@@ -30,16 +30,11 @@ import { JwtMiddleware } from './middlewares/jwt.middlware';
       isGlobal: true
     }),
     TypeOrmModule.forRoot({
-      type: 'mysql',
-      port: +process.env.PORT,
-      username: process.env.USERNAME,
-      password: process.env.PASSWORD,
-      database: process.env.DATABASE,
-      host: process.env.HOST,
-      charset: process.env.COLLATION,
+      type: 'postgres',
+      url: `postgresql://${process.env.USERNAME}:${process.env.PASSWORD}@${process.env.HOST}:${process.env.PORT}/${process.env.DATABASE}`,
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
-      subscribers: [__dirname + '/**/**/subscriber/*{.ts,.js}'],
+      subscribers: [__dirname + '/**/**/subscriber/*{.ts,.js}']
     }),
   ],
   controllers: [AppController],

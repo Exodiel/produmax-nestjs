@@ -4,7 +4,7 @@ import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
+// import rateLimit from 'express-rate-limit';
 import { ValidationPipe } from '@nestjs/common';
 
 const port = process.env.PORT_SERVER || 4000;
