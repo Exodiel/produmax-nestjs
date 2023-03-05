@@ -19,7 +19,7 @@ jobs:
         run: |
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
       - name: Build the Docker image
-        run: docker build . --file Dockerfile --tag exodiel/produmax-api:$(date +%s)
+        run: docker build . --file Dockerfile --tag exodiel/produmax-api:latest
 
       - name: Docker Push
         run: docker push exodiel/produmax-api
