@@ -1,7 +1,6 @@
 import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { join } from 'path';
 import helmet from 'helmet';
 // import rateLimit from 'express-rate-limit';
 import { ValidationPipe } from '@nestjs/common';
@@ -21,11 +20,6 @@ async function bootstrap() {
       max: 100, // limit each IP to 100 requests per windowMs
     }),
   );*/
-  app.useStaticAssets({
-    root: join(__dirname, '..', 'uploads'),
-    prefix: '/uploads',
-    index: false
-  });
 
   await app.listen(port);
 }
