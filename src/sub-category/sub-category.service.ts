@@ -12,20 +12,20 @@ export class SubCategoryService {
         @InjectRepository(SubCategory)
         private readonly subcategoryRepository: Repository<SubCategory>,
         private dataSource: DataSource,
-    ) {}
+    ) { }
 
     async getSubcategories(): Promise<SubCategory[]> {
         const subcategories = await this.subcategoryRepository.find({ relations: ['products'] });
         return subcategories;
     }
 
-    async getSubCategoriesRelationated(categoryId: number): Promise<SubCategory[]> {
-        const subcategories = await this.subcategoryRepository.find({ relations: ['products'], where: { category: { id: categoryId } } });
+    async getSubCategoriesRelationated(categoryId: string): Promise<SubCategory[]> {
+        const subcategories = await this.subcategoryRepository.find({ where: { categoryId } });
 
         return subcategories;
     }
 
-    async getSubcategory(id: number): Promise<SubCategory> {
+    async getSubcategory(id: string): Promise<SubCategory> {
         const subcategory = await this.subcategoryRepository.findOneOrFail({ where: { id }, relations: ['products'] });
         return subcategory;
     }
@@ -39,23 +39,13 @@ export class SubCategoryService {
         if (!category) {
             throw new NotFoundException('Categoría no encontrada');
         }
-        const subcategory = this.subcategoryRepository.create({ name, category, imageUrl });
-        await this.subcategoryRepository.save(subcategory);
-        const lastSubcategory = await this.getLastSubcategory();
+        const subcategory = this.subcategoryRepository.create({ name, categoryId, imageUrl });
+        const lastSubcategory = await this.subcategoryRepository.save(subcategory);
         return lastSubcategory;
     }
 
-    async getLastSubcategory() {
-        const subcategory = await this.dataSource.getRepository(SubCategory)
-            .createQueryBuilder('subcategory')
-            .orderBy('subcategory.id', 'DESC')
-            .limit(1)
-            .getOne();
-        return subcategory;
-    }
-
-    async updateSubCategory(subcategoryID: number, subCategoryDTO: SubCategoryDTO): Promise<SubCategory> {
-        let subcategory = await this.subcategoryRepository.findOneByOrFail({id: subcategoryID});
+    async updateSubCategory(subcategoryID: string, subCategoryDTO: SubCategoryDTO): Promise<SubCategory> {
+        let subcategory = await this.subcategoryRepository.findOneByOrFail({ id: subcategoryID });
         if (!subcategory) {
             throw new HttpException('No se encontró la categoría', HttpStatus.NOT_FOUND);
         }
@@ -67,12 +57,12 @@ export class SubCategoryService {
             name,
             imageUrl,
         });
-        subcategory = await this.subcategoryRepository.findOneByOrFail({id: subcategoryID});
+        subcategory = await this.subcategoryRepository.findOneByOrFail({ id: subcategoryID });
         return subcategory;
     }
 
-    async deleteSubCategory(subcategoryID: number): Promise<any> {
-        const subcategory = await this.subcategoryRepository.findOneByOrFail({id: subcategoryID});
+    async deleteSubCategory(subcategoryID: string): Promise<any> {
+        const subcategory = await this.subcategoryRepository.findOneByOrFail({ id: subcategoryID });
         if (!subcategory) {
             throw new HttpException('No se encontró la categoría', HttpStatus.NOT_FOUND);
         }
@@ -81,7 +71,7 @@ export class SubCategoryService {
         return subcategory;
     }
 
-    async searchCategory(subcategoryId: number): Promise<Category> {
+    async searchCategory(subcategoryId: string): Promise<Category> {
         const category = await this.dataSource.getRepository(Category)
             .createQueryBuilder('category')
             .innerJoin('category.subcategories', 'subcategory')

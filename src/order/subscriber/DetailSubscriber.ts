@@ -1,4 +1,4 @@
-import {EventSubscriber, EntitySubscriberInterface, InsertEvent, DataSource, RemoveEvent} from 'typeorm';
+import { EventSubscriber, EntitySubscriberInterface, InsertEvent, DataSource, RemoveEvent } from 'typeorm';
 import { Details } from '../details.entity';
 import { Product } from '../../product/product.entity';
 
@@ -7,29 +7,37 @@ export class DetailSubscriber implements EntitySubscriberInterface<Details> {
     // constructor(dataSource: DataSource) {
     //     dataSource.subscribers.push(this);
     // }
-    
+
     listenTo() {
-        return Details; 
+        return Details;
     }
 
     async afterInsert(event: InsertEvent<Details>) {
-        const { quantity, product } = event.entity;
+        const { quantity, productId } = event.entity;
+        const product = await event.connection.getRepository(Product)
+            .createQueryBuilder()
+            .where('id = :id', { id: productId })
+            .execute()
         const newStock = product.stock - quantity;
         await event.connection.getRepository(Product)
             .createQueryBuilder()
             .update(Product)
-            .set({ stock:  newStock})
-            .where('id = :id', { id: product.id })
+            .set({ stock: newStock })
+            .where('id = :id', { id: productId })
             .execute();
     }
 
     async beforeRemove(event: RemoveEvent<Details>) {
-        const { product, quantity } = event.entity;
+        const { productId, quantity } = event.entity;
+        const product = await event.connection.getRepository(Product)
+            .createQueryBuilder()
+            .where('id = :id', { id: productId })
+            .execute()
         const updatedStock = product.stock + quantity;
         await event.connection.getRepository(Product)
             .createQueryBuilder('product')
             .update(Product)
-            .set({ stock:  updatedStock})
+            .set({ stock: updatedStock })
             .where('product.id = :id', { id: product.id })
             .execute();
     }

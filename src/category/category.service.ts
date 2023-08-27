@@ -11,42 +11,42 @@ export class CategoryService {
         @InjectRepository(Category)
         private readonly categoryRepository: Repository<Category>,
         private dataSource: DataSource
-    ) {}
+    ) { }
 
     async getCategories(): Promise<Category[]> {
         const categories = await this.categoryRepository.find();
         return categories;
     }
 
-    async getCategory(categoryId: number): Promise<Category> {
-        const category = await this.categoryRepository.findOneByOrFail({ id: categoryId });
+    async getCategory(categoryId: string): Promise<Category> {
+        const category = await this.categoryRepository.findOneBy({ id: categoryId });
         return category;
     }
 
     async getCategoryByName(name: string): Promise<Category> {
-        const category = await this.categoryRepository.findOneByOrFail({ name });
+        const category = await this.categoryRepository.findOneBy({ name });
         return category;
     }
 
     async createCategory(categoryDTO: CategoryDTO): Promise<Category> {
-        const { name, imageUrl} = categoryDTO;
-        const category = this.categoryRepository.create({ name, imageUrl });
+        const { name, imageUrl, categoryId } = categoryDTO;
+        const category = this.categoryRepository.create({ name, imageUrl, id: categoryId });
         await this.categoryRepository.save(category);
         return category;
     }
 
-    async deleteCategory(categoryId: number): Promise<Category> {
-        const category = await this.categoryRepository.findOneByOrFail({ id: categoryId });
+    async deleteCategory(categoryId: string): Promise<Category> {
+        const category = await this.categoryRepository.findOneBy({ id: categoryId });
         if (!category) {
             throw new HttpException('No se encontró la categoría', HttpStatus.NOT_FOUND);
         }
         await deletePhoto(category.imageUrl);
-        await this.categoryRepository.delete({id: categoryId});
+        await this.categoryRepository.delete({ id: categoryId });
         return category;
     }
 
-    async updateCategory(categoryId: number, categoryDTO: Partial<CategoryDTO>): Promise<Category> {
-        let category = await this.categoryRepository.findOneByOrFail({ id: categoryId });
+    async updateCategory(categoryId: string, categoryDTO: Partial<CategoryDTO>): Promise<Category> {
+        const category = await this.categoryRepository.findOneBy({ id: categoryId });
         if (!category) {
             throw new HttpException('No se encontró la categoría', HttpStatus.NOT_FOUND);
         }
@@ -54,13 +54,12 @@ export class CategoryService {
         if (category.imageUrl !== imageUrl) {
             await deletePhoto(category.imageUrl);
         }
-        await this.categoryRepository.update({id: categoryId},
+        await this.categoryRepository.update({ id: categoryId },
             {
                 name,
                 imageUrl,
             },
         );
-        category = await this.categoryRepository.findOneByOrFail({ id: categoryId });
         return category;
     }
 

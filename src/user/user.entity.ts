@@ -1,14 +1,20 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, BeforeInsert } from 'typeorm';
+import { Entity, PrimaryColumn, Column, OneToMany } from 'typeorm';
 import { IsString, Length, IsEmail } from 'class-validator';
-import { Rol } from '../rol/rol.entity';
 import * as bcrypt from 'bcrypt';
 import { Order } from '../order/order.entity';
-import { Session } from '../session/session.entity';
 
 @Entity('user')
 export class User {
-    @PrimaryGeneratedColumn()
-    id: number;
+    @PrimaryColumn('uuid')
+    id: string;
+
+    @Column({
+        type: 'varchar',
+        length: 20,
+        unique: true,
+    })
+    @IsString()
+    identification: string;
 
     @Column({
         type: 'varchar',
@@ -16,7 +22,7 @@ export class User {
         unique: true,
     })
     @IsString()
-    ci: string;
+    identificationType: string;
 
     @Column({
         type: 'varchar',
@@ -63,18 +69,9 @@ export class User {
 
     @Column({
         type: 'varchar',
-        length: 55,
+        length: 220,
     })
     imageUrl: string;
-
-    @ManyToOne(() => Rol, rol => rol.users)
-    rol: Rol;
-
-    @OneToMany(() => Order, order => order.user)
-    orders: Order[];
-
-    @OneToMany(() => Session, session => session.user)
-    sessions: Session[];
 
     async comparePassword(attempt: string): Promise<boolean> {
         return bcrypt.compare(attempt, this.password);

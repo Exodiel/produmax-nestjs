@@ -6,7 +6,6 @@ import { Product } from './product.entity';
 import { Unit } from '../unit/unit.entity';
 import { UnitService } from '../unit/unit.service';
 import { JwtMiddleware } from '../middlewares/jwt.middlware';
-import { RolMiddleware } from '../middlewares/rol.middleware';
 import { AppGateway } from '../app.gateway';
 import { SubCategory } from '../sub-category/sub.category.entity';
 import { SubCategoryService } from '../sub-category/sub-category.service';
@@ -20,7 +19,7 @@ import { SubCategoryService } from '../sub-category/sub-category.service';
 export class ProductModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(JwtMiddleware, RolMiddleware)
+      .apply(JwtMiddleware)
       .exclude(
         { path: 'products/', method: RequestMethod.GET },
         { path: 'products/single', method: RequestMethod.GET },

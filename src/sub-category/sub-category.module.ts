@@ -4,7 +4,6 @@ import { SubCategoryService } from './sub-category.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SubCategory } from './sub.category.entity';
 import { JwtMiddleware } from '../middlewares/jwt.middlware';
-import { RolMiddleware } from '../middlewares/rol.middleware';
 import { CategoryModule } from '../category/category.module';
 
 @Module({
@@ -16,7 +15,7 @@ import { CategoryModule } from '../category/category.module';
 export class SubCategoryModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(JwtMiddleware, RolMiddleware)
+      .apply(JwtMiddleware)
       .exclude(
         { path: 'subcategories/', method: RequestMethod.GET },
         { path: 'subcategories/single', method: RequestMethod.GET },

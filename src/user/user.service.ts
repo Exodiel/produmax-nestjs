@@ -5,7 +5,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from './user.entity';
 import { Repository, DataSource } from 'typeorm';
-import { Rol } from '../rol/rol.entity';
 import { AppGateway } from '../app.gateway';
 import { deletePhoto } from '../utils/file-uploading';
 
@@ -14,19 +13,17 @@ export class UserService {
     constructor(
         @InjectRepository(User)
         private readonly userRepository: Repository<User>,
-        @InjectRepository(Rol)
-        private readonly rolRepository: Repository<Rol>,
         private gateway: AppGateway,
         private dataSource: DataSource,
-    ) {}
+    ) { }
 
     async getUsers(): Promise<User[]> {
-        const users = await this.userRepository.find({ relations: ['rol'] });
+        const users = await this.userRepository.find();
         return users;
     }
 
-    async getUser(userId: number): Promise<User> {
-        const user = await this.userRepository.findOne({ where: { id: userId }, relations: ['rol'] });
+    async getUser(userId: string): Promise<User> {
+        const user = await this.userRepository.findOne({ where: { id: userId } });
         if (!user) {
             throw new NotFoundException('No se encontró el usuario');
         }
@@ -34,14 +31,14 @@ export class UserService {
     }
 
     async getUserCI(userCi: string): Promise<User> {
-        const user = await this.userRepository.findOne({ where: { ci: userCi }, relations: ['rol'] });
+        const user = await this.userRepository.findOne({ where: { identification: userCi } });
         if (!user) {
             throw new NotFoundException('No se encontró el usuario');
         }
         return user;
     }
 
-    async getOrdersRelationated(userId: number) {
+    async getOrdersRelationated(userId: string) {
         const orders = await this.dataSource.getRepository(Order)
             .createQueryBuilder('order')
             .innerJoin('order.user', 'user', 'user.id = :id', { id: userId })
@@ -50,35 +47,16 @@ export class UserService {
     }
 
     async createUser(userDTO: UserDTO): Promise<User> {
-        const {ci, name, lastname, birthdate, email, password, phone, rolId, imageUrl } = userDTO;
+        const { identification, identificationType, name, lastname, birthdate, email, password, phone, imageUrl } = userDTO;
         let user = await this.userRepository.findOne({ where: { email } });
         if (user) {
             throw new HttpException('El usuario ya existe', HttpStatus.BAD_REQUEST);
         }
-        const rol = await this.searchRol(rolId);
-        user = this.userRepository.create({ ci, name, lastname, birthdate, email, password, phone, rol, imageUrl });
-        await this.userRepository.save(user);
-        const lastUser = await this.getLastUser();
+        user = this.userRepository.create({ identification, name, lastname, birthdate, email, password, phone, identificationType, imageUrl });
+        const newUser = await this.userRepository.save(user);
         const counter = await this.getCountUsers();
         this.gateway.wss.emit('countUsers', counter);
-        return lastUser;
-    }
-
-    private async searchRol(rolId: number): Promise<Rol> {
-        const rol = await this.rolRepository.findOneBy({ id: rolId });
-        if (!rol) {
-            throw new HttpException('No se encontró el rol', HttpStatus.NOT_FOUND);
-        }
-        return rol;
-    }
-
-    async getLastUser() {
-        const user = await this.dataSource.getRepository(User)
-            .createQueryBuilder('user')
-            .orderBy('user.id', 'DESC')
-            .limit(1)
-            .getOne();
-        return user;
+        return newUser;
     }
 
     async getCountUsers() {
@@ -90,7 +68,7 @@ export class UserService {
         return !count ? 0 : count;
     }
 
-    async deleteUser(userId: number): Promise<any> {
+    async deleteUser(userId: string): Promise<any> {
         const user = await this.userRepository.findOneBy({ id: userId });
         if (!user) {
             throw new HttpException('El usuario no se encontró', HttpStatus.BAD_REQUEST);
@@ -102,20 +80,19 @@ export class UserService {
         return user;
     }
 
-    async updateUser(userId: number, userDTO: UserDTO): Promise<User> {
-        const {ci, name, lastname, birthdate, email, phone, rolId, imageUrl } = userDTO;
-        let user = await this.userRepository.findOne({where: { id: userId }});
+    async updateUser(userId: string, userDTO: UserDTO): Promise<User> {
+        const { identification, identificationType, name, lastname, birthdate, email, phone, imageUrl } = userDTO;
+        let user = await this.userRepository.findOne({ where: { id: userId } });
         if (!user) {
             throw new HttpException('No se encontró el usuario', HttpStatus.NOT_FOUND);
         }
-        const rol = await this.searchRol(rolId);
         if (user.imageUrl !== imageUrl) {
             await deletePhoto(user.imageUrl);
         }
         await this.dataSource.getRepository(User)
             .createQueryBuilder('user')
             .update(User)
-            .set({ ci, name, lastname, birthdate, email, phone, rol, imageUrl })
+            .set({ identification, identificationType, name, lastname, birthdate, email, phone, imageUrl })
             .where('user.id = :id', { id: userId })
             .execute();
         user = await this.userRepository.findOne({ where: { id: userId } });
@@ -123,8 +100,8 @@ export class UserService {
         return user;
     }
 
-    async updatePassword(password: string, userId: number) {
-        const user = await this.userRepository.findOneBy({id: userId});
+    async updatePassword(password: string, userId: string) {
+        const user = await this.userRepository.findOneBy({ id: userId });
         if (!user) {
             throw new HttpException('No se encontró el usuario', HttpStatus.NOT_FOUND);
         }

@@ -1,20 +1,27 @@
-import { Controller, Get, Res, HttpStatus, Param, NotFoundException, Post, Delete, Put, Body, Query } from '@nestjs/common';
-import { UnitService } from './unit.service';
+import { Controller, Get, Res, HttpStatus, NotFoundException, Post, Delete, Put, Body, Query } from '@nestjs/common';
 import { Response } from 'express';
+import { Roles } from 'nest-keycloak-connect';
+import { UnitService } from './unit.service';
 import { UnitDTO } from './unit.dto';
 
 @Controller('units')
 export class UnitController {
-    constructor(private unitService: UnitService) {}
+    constructor(private unitService: UnitService) { }
 
     @Get('/')
+    @Roles({
+        roles: ['app-admin']
+    })
     async getUnits(@Res() res: Response) {
         const units = await this.unitService.getUnits();
         return res.status(HttpStatus.OK).json(units);
     }
 
     @Get('/single')
-    async getUnit(@Res() res: Response, @Query('id') id: number) {
+    @Roles({
+        roles: ['app-admin']
+    })
+    async getUnit(@Res() res: Response, @Query('id') id: string) {
         const unit = await this.unitService.getUnit(id);
         if (!unit) {
             throw new NotFoundException('No se encontró la unidad');
@@ -23,6 +30,9 @@ export class UnitController {
     }
 
     @Post('/')
+    @Roles({
+        roles: ['app-admin']
+    })
     async createUnit(@Res() res: Response, @Body() unitDTO: UnitDTO) {
         const newUnit = await this.unitService.createUnit(unitDTO);
         return res.status(HttpStatus.CREATED).json({
@@ -31,14 +41,20 @@ export class UnitController {
     }
 
     @Delete('/delete')
-    async deleteUnit(@Res() res: Response, @Query('id') id: number) {
+    @Roles({
+        roles: ['app-admin']
+    })
+    async deleteUnit(@Res() res: Response, @Query('id') id: string) {
         const deletedUnit = await this.unitService.deleteUnit(id);
 
-        return res.status(HttpStatus.OK).json({message: 'Unidad eliminada'});
+        return res.status(HttpStatus.OK).json({ message: 'Unidad eliminada' });
     }
 
     @Put('/update')
-    async updateUnit(@Res() res: Response, @Query('id') id: number, @Body() unitDTO: UnitDTO) {
+    @Roles({
+        roles: ['app-admin']
+    })
+    async updateUnit(@Res() res: Response, @Query('id') id: string, @Body() unitDTO: UnitDTO) {
         const updatedUnit = await this.unitService.updateUnit(id, unitDTO);
 
         return res.status(HttpStatus.OK).json({
