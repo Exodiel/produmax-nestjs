@@ -1,4 +1,4 @@
-import {EventSubscriber, EntitySubscriberInterface, DataSource, RemoveEvent} from 'typeorm';
+import { EventSubscriber, EntitySubscriberInterface, DataSource, RemoveEvent } from 'typeorm';
 import { Order } from '../order.entity';
 import { Details } from '../details.entity';
 
@@ -16,8 +16,6 @@ export class OrderSubscriber implements EntitySubscriberInterface<Order> {
         const { id } = event.entity;
         const details = await event.connection.getRepository(Details)
             .createQueryBuilder('details')
-            .leftJoinAndSelect('details.order', 'order')
-            .leftJoinAndSelect('details.product', 'product')
             .where('details.orderId = :id', { id })
             .getMany();
         await event.connection.getRepository(Details).remove(details);

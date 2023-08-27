@@ -4,7 +4,6 @@ import { UnitController } from './unit.controller';
 import { UnitService } from './unit.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtMiddleware } from '../middlewares/jwt.middlware';
-import { RolMiddleware } from '../middlewares/rol.middleware';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Unit])],
@@ -15,7 +14,7 @@ import { RolMiddleware } from '../middlewares/rol.middleware';
 export class UnitModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(JwtMiddleware, RolMiddleware)
+      .apply(JwtMiddleware)
       .forRoutes(UnitController);
   }
 }

@@ -1,12 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, BeforeInsert } from 'typeorm';
+import { Entity, PrimaryColumn, Column, BeforeInsert } from 'typeorm';
 import { IsString, Length } from 'class-validator';
-import { Details } from './details.entity';
-import { User } from '../user/user.entity';
 
 @Entity('order')
 export class Order {
-    @PrimaryGeneratedColumn()
-    id: number;
+    @PrimaryColumn('uuid')
+    id: string;
+
+    @Column('uuid')
+    userId: string;
 
     @Column({
         type: 'varchar',
@@ -60,11 +61,5 @@ export class Order {
     saveState() {
         this.state = 'procesando';
     }
-
-    @ManyToOne(() => User, user => user.orders)
-    user: User;
-
-    @OneToMany(() => Details, (details) => details.order)
-    details: Details[];
 
 }

@@ -4,7 +4,6 @@ import { CategoryService } from './category.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Category } from './category.entity';
 import { JwtMiddleware } from '../middlewares/jwt.middlware';
-import { RolMiddleware } from '../middlewares/rol.middleware';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Category])],
@@ -15,7 +14,7 @@ import { RolMiddleware } from '../middlewares/rol.middleware';
 export class CategoryModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(JwtMiddleware, RolMiddleware)
+      .apply(JwtMiddleware)
       .exclude(
         { path: 'categories/', method: RequestMethod.GET },
         { path: 'categories/single-category', method: RequestMethod.GET },

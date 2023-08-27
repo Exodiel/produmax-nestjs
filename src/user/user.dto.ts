@@ -1,12 +1,12 @@
 export class UserDTO {
-    ci: string;
+    identification: string;
+    identificationType: string;
     name: string;
     lastname: string;
     birthdate: string;
     email: string;
     password: string;
     phone: string;
-    rolId: number;
     imageUrl: string;
 }
 
@@ -18,7 +18,8 @@ export class UserRO {
 
 // tslint:disable-next-line: max-classes-per-file
 export class UserR {
-    ci: string;
+    identification: string;
+    identificationType: string;
     name: string;
     lastname: string;
     birthdate: string;

@@ -7,7 +7,6 @@ import { Order } from './order.entity';
 import { Product } from '../product/product.entity';
 import { User } from '../user/user.entity';
 import { JwtMiddleware } from '../middlewares/jwt.middlware';
-import { RolMiddleware } from '../middlewares/rol.middleware';
 import { OrderSubscriber } from './subscriber/OrderSubscriber';
 import { DetailSubscriber } from './subscriber/DetailSubscriber';
 import { AppGateway } from '../app.gateway';
@@ -22,13 +21,5 @@ export class OrderModule implements NestModule {
     consumer
       .apply(JwtMiddleware)
       .forRoutes(OrderController);
-
-    consumer.apply(RolMiddleware)
-      .forRoutes(
-        { path: 'order/delete', method: RequestMethod.DELETE},
-        { path: 'order/counter', method: RequestMethod.GET },
-        { path: 'order/counter-sell', method: RequestMethod.GET },
-        { path: 'order/counter-cancel', method: RequestMethod.GET },
-      );
   }
 }

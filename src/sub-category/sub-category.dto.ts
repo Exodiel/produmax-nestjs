@@ -1,5 +1,5 @@
 export class SubCategoryDTO {
     name: string;
-    categoryId: number;
+    categoryId: string;
     imageUrl: string;
 }

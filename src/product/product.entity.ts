@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
+import { Entity, PrimaryColumn, Column, ManyToOne, OneToMany } from 'typeorm';
 import { Unit } from '../unit/unit.entity';
 import { IsString, Length, IsInt } from 'class-validator';
 import { SubCategory } from '../sub-category/sub.category.entity';
@@ -6,8 +6,8 @@ import { Details } from '../order/details.entity';
 
 @Entity('product')
 export class Product {
-    @PrimaryGeneratedColumn()
-    id: number;
+    @PrimaryColumn('uuid')
+    id: string;
 
     @Column({
         type: 'varchar',
@@ -46,16 +46,13 @@ export class Product {
 
     @Column({
         type: 'varchar',
-        length: 55,
+        length: 220,
     })
     imageUrl: string;
 
-    @ManyToOne(() => Unit, unit => unit.products)
-    unit: Unit;
+    @Column('uuid')
+    unitId: string;
 
-    @ManyToOne(() => SubCategory, subcategory => subcategory.products)
-    subcategory: SubCategory;
-
-    @OneToMany(() => Details, (details) => details.product)
-    details: Details[];
+    @Column('uuid')
+    subcategoryId: string;
 }

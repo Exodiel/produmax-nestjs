@@ -15,15 +15,15 @@ export class OrderService {
         private readonly orderRepository: Repository<Order>,
         private dataSource: DataSource,
         private gateway: AppGateway,
-    ) {}
+    ) { }
 
     async getOrders(): Promise<Order[]> {
-        const orders = await this.orderRepository.find({ relations: ['user', 'user.rol'] });
+        const orders = await this.orderRepository.find({});
         return orders;
     }
 
-    async getOrder(orderId: number): Promise<Order> {
-        const order = await this.orderRepository.findOne({ where: { id: orderId }, relations: ['user', 'user.rol'] });
+    async getOrder(orderId: string): Promise<Order> {
+        const order = await this.orderRepository.findOne({ where: { id: orderId } });
         if (!order) {
             throw new NotFoundException('No se encontró al orden');
         }
@@ -39,17 +39,16 @@ export class OrderService {
     }
 
     async createOrder(orderDTO: OrderDTO): Promise<any> {
-        const { address, neigh, total, dateDelivery, userId, data } = orderDTO;
+        const { address, neigh, total, dateDelivery, userId, orderId, data } = orderDTO;
         const user = await this.getUser(userId);
-        const order = this.orderRepository.create({ address, neigh, total, dateDelivery, user});
-        await this.orderRepository.save(order);
-        const lastOrder = await this.searchLastOrder();
-        await this.createDetails(data, lastOrder);
+        const order = this.orderRepository.create({ address, neigh, total, dateDelivery, userId, id: orderId });
+        const newOrder = await this.orderRepository.save(order);
+        await this.createDetails(data, newOrder);
         const counter = await this.getCountOrders();
         this.gateway.wss.emit('countOrders', counter); // evento websocket
         this.gateway.wss.emit('userOrder', user);
-        this.gateway.wss.emit('newOrder', lastOrder);
-        return lastOrder;
+        this.gateway.wss.emit('newOrder', newOrder);
+        return newOrder;
     }
 
     private async createDetails(data: any[], order: Order) {
@@ -72,17 +71,17 @@ export class OrderService {
             .values({
                 price,
                 quantity,
-                order,
-                product,
+                orderId: order.id,
+                productId: product.id,
             })
             .execute();
     }
 
-    private async getProductFromDetail(productID: number): Promise<Product> {
+    private async getProductFromDetail(productID: string): Promise<Product> {
         const product = await this.dataSource.getRepository(Product)
-                .createQueryBuilder('product')
-                .where('product.id = :id', { id: productID })
-                .getOne();
+            .createQueryBuilder('product')
+            .where('product.id = :id', { id: productID })
+            .getOne();
         if (!product) {
             throw new NotFoundException('No se encontró el producto');
         }
@@ -90,26 +89,16 @@ export class OrderService {
         return product;
     }
 
-    private async getUser(userId: number): Promise<User> {
+    private async getUser(userId: string): Promise<User> {
         const user = await this.dataSource.getRepository(User)
             .createQueryBuilder('user')
-            .where('user.id = :id', {id: userId})
+            .where('user.id = :id', { id: userId })
             .getOne();
         if (!user) {
             throw new NotFoundException('No se encontró al usuario');
         }
 
         return user;
-    }
-
-    private async searchLastOrder() {
-        const order = await this.dataSource.getRepository(Order)
-            .createQueryBuilder('order')
-            .orderBy('order.id', 'DESC')
-            .limit(1)
-            .getOne();
-
-        return order;
     }
 
     async getAmount() {
@@ -152,7 +141,7 @@ export class OrderService {
         return !count ? 0 : count;
     }
 
-    async updateStateOrder(orderID: number, newState: string) {
+    async updateStateOrder(orderID: string, newState: string) {
         await this.searchOrder(orderID);
 
         await this.dataSource
@@ -164,21 +153,21 @@ export class OrderService {
         this.gateway.wss.emit('updateOrder', 'Orden actualizada');
     }
 
-    async deleteOrder(orderId: number): Promise<any> {
+    async deleteOrder(orderId: string): Promise<any> {
         const or = await this.searchOrder(orderId);
         await this.orderRepository.remove(or);
         return or;
     }
 
-    private async searchOrder(orderId: number): Promise<Order> {
-        const or = await this.dataSource.getRepository(Order)
+    private async searchOrder(orderId: string): Promise<Order> {
+        const order = await this.dataSource.getRepository(Order)
             .createQueryBuilder('order')
             .where('order.id = :id', { id: orderId })
             .getOne();
-        if (!or) {
+        if (!order) {
             throw new NotFoundException('Orden no encontrada');
         }
-        return or;
+        return order;
     }
 
 }

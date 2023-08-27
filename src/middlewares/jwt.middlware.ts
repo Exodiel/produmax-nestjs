@@ -6,7 +6,7 @@ import { RequestCustom } from '../custom/RequestCustom';
 export class JwtMiddleware implements NestMiddleware {
     use(expressRequest: Request, res: Response, next: NextFunction) {
         const req = expressRequest as RequestCustom;
-        if ((!req.headers.authorization || !req.headers['x-api-key']) && (req.headers['x-api-key'] !== process.env.API_SECRET)) {
+        if (!req.headers.authorization) {
             throw new UnauthorizedException('No se encuentra autorizado');
         }
         const auth = req.headers.authorization;

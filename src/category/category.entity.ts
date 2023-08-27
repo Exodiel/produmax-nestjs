@@ -1,10 +1,10 @@
 import { SubCategory } from '../sub-category/sub.category.entity';
-import { PrimaryGeneratedColumn, Column, Entity, OneToMany } from 'typeorm';
+import { PrimaryColumn, Column, Entity, OneToMany } from 'typeorm';
 
 @Entity('category')
 export class Category {
-    @PrimaryGeneratedColumn()
-    id: number;
+    @PrimaryColumn('uuid')
+    id: string;
 
     @Column({
         type: 'varchar',
@@ -14,10 +14,7 @@ export class Category {
 
     @Column({
         type: 'varchar',
-        length: 55,
+        length: 220,
     })
     imageUrl: string;
-
-    @OneToMany(() => SubCategory, subcategory => subcategory.category)
-    subcategories: SubCategory[];
 }

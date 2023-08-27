@@ -5,7 +5,7 @@ import { OrderDTO } from './order.dto';
 
 @Controller('order')
 export class OrderController {
-    constructor(private orderService: OrderService) {}
+    constructor(private orderService: OrderService) { }
 
     @Get('/')
     async getOrders(@Res() res: Response, @Req() req: Request) {
@@ -14,7 +14,7 @@ export class OrderController {
     }
 
     @Get('/single')
-    async getOrder(@Res() res: Response, @Req() req: Request, @Query('id') id: number) {
+    async getOrder(@Res() res: Response, @Req() req: Request, @Query('id') id: string) {
         const order = await this.orderService.getOrder(id);
         return res.status(HttpStatus.OK).json(order);
     }
@@ -59,7 +59,7 @@ export class OrderController {
     }
 
     @Put('/update-order')
-    async updateOrder(@Res() res: Response, @Req() req: Request, @Query('id') id: number, @Body() data) {
+    async updateOrder(@Res() res: Response, @Req() req: Request, @Query('id') id: string, @Body() data) {
         const { state } = data;
         await this.orderService.updateStateOrder(id, state);
         return res.status(HttpStatus.OK).json({
@@ -68,7 +68,7 @@ export class OrderController {
     }
 
     @Delete('/delete')
-    async deleteOrder(@Res() res: Response, @Req() req: Request, @Query('id') id: number) {
+    async deleteOrder(@Res() res: Response, @Req() req: Request, @Query('id') id: string) {
         await this.orderService.deleteOrder(id);
         return res.status(HttpStatus.OK).json({ message: 'Orden Eliminada' });
     }

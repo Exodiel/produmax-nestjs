@@ -1,12 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
+import { Entity, PrimaryColumn, Column, ManyToOne, OneToMany } from 'typeorm';
 import { IsString } from 'class-validator';
 import { Category } from '../category/category.entity';
 import { Product } from '../product/product.entity';
 
 @Entity('subcategory')
 export class SubCategory {
-    @PrimaryGeneratedColumn()
-    id: number;
+    @PrimaryColumn('uuid')
+    id: string;
 
     @Column({
         type: 'varchar',
@@ -17,13 +17,10 @@ export class SubCategory {
 
     @Column({
         type: 'varchar',
-        length: 55,
+        length: 220,
     })
     imageUrl: string;
 
-    @OneToMany(type => Product, products => products.subcategory)
-    products: Product[];
-
-    @ManyToOne(type => Category, category => category.subcategories)
-    category: Category;
+    @Column('uuid')
+    categoryId: string;
 }

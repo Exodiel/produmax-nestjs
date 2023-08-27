@@ -1,11 +1,9 @@
-import { Entity, Column, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { Product } from '../product/product.entity';
-import { Order } from './order.entity';
+import { Entity, Column, PrimaryColumn } from 'typeorm';
 
 @Entity('details')
 export class Details {
-    @PrimaryGeneratedColumn()
-    id: number
+    @PrimaryColumn('uuid')
+    id: string
 
     @Column({
         type: 'smallint',
@@ -19,9 +17,9 @@ export class Details {
     })
     price: number;
 
-    @ManyToOne(() => Product, product => product.details)
-    product: Product;
+    @Column('uuid')
+    productId: string;
 
-    @ManyToOne(() => Order, order => order.details)
-    order: Order;
+    @Column('uuid')
+    orderId: string;
 }

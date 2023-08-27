@@ -19,15 +19,15 @@ export class ProductService {
         private readonly unitRepository: Repository<Unit>,
         private gateway: AppGateway,
         private dataSource: DataSource,
-    ) {}
+    ) { }
 
     async getProducts(): Promise<Product[]> {
         const products = await this.productRepository.find();
         return products;
     }
 
-    async getProduct(id: number): Promise<Product> {
-        const product = await this.productRepository.findOneByOrFail({id});
+    async getProduct(id: string): Promise<Product> {
+        const product = await this.productRepository.findOneByOrFail({ id });
         return product;
     }
 
@@ -43,16 +43,13 @@ export class ProductService {
     }
 
     async createProduct(productDTO: ProductDTO): Promise<Product> {
-        const { name, detail, stock, unitPrice, weight, unitId, subcategoryId, imageUrl } = productDTO;
-        const unit = await this.getUnit(unitId);
-        const subcategory = await this.getSubCategory(subcategoryId);
-        const product = this.productRepository.create({ name, detail, stock, unitPrice, weight, unit, subcategory, imageUrl });
-        await this.productRepository.save(product);
-        const lastProduct = await this.getLastProduct();
+        const { name, detail, stock, unitPrice, weight, unitId, subcategoryId, imageUrl, productId } = productDTO;
+        const product = this.productRepository.create({ id: productId, name, detail, stock, unitPrice, weight, unitId, subcategoryId, imageUrl });
+        const newProduct = await this.productRepository.save(product);
         const counter = await this.getCountProducts();
-        this.gateway.wss.emit('newProduct', lastProduct);
+        this.gateway.wss.emit('newProduct', newProduct);
         this.gateway.wss.emit('countProducts', counter);
-        return lastProduct;
+        return newProduct;
     }
 
     async getCountProducts() {
@@ -64,17 +61,8 @@ export class ProductService {
         return !count ? 0 : count;
     }
 
-    async getLastProduct() {
-        const product = await this.dataSource.getRepository(Product)
-            .createQueryBuilder('product')
-            .orderBy('product.id', 'DESC')
-            .limit(1)
-            .getOne();
-        return product;
-    }
-
-    async deleteProduct(productId: number): Promise<any> {
-        const product = await this.productRepository.findOneOrFail({  where: { id: productId }, relations: ['image'] });
+    async deleteProduct(productId: string): Promise<any> {
+        const product = await this.productRepository.findOneOrFail({ where: { id: productId }, relations: ['image'] });
         if (!product) {
             throw new HttpException('No se encontró la unidad', HttpStatus.NOT_FOUND);
         }
@@ -83,51 +71,33 @@ export class ProductService {
         return product;
     }
 
-    async updateProduct(productId: number, productDTO: ProductDTO): Promise<Product> {
+    async updateProduct(productId: string, productDTO: ProductDTO): Promise<Product> {
         let product = await this.productRepository.findOne({ where: { id: productId } });
         if (!product) {
             throw new HttpException('No se encontró el producto', HttpStatus.NOT_FOUND);
         }
         const { unitId, subcategoryId, name, detail, stock, unitPrice, weight, imageUrl } = productDTO;
-        const unit = await this.getUnit(unitId);
-        const subcategory = await this.getSubCategory(subcategoryId);
 
         if (product.imageUrl !== imageUrl) {
             await deletePhoto(product.imageUrl);
         }
 
-        await this.productRepository.update({id: productId}, {
+        await this.productRepository.update({ id: productId }, {
             name,
             detail,
             stock,
             unitPrice,
             weight,
             imageUrl: !imageUrl ? product.imageUrl : imageUrl,
-            unit,
-            subcategory,
+            unitId,
+            subcategoryId,
         });
         product = await this.productRepository.findOneOrFail({ where: { id: productId } });
 
         return product;
     }
 
-    private async getUnit(unitId: number): Promise<Unit> {
-        const unit = await this.unitRepository.findOne({ where: { id: unitId } });
-        if (!unit) {
-            throw new NotFoundException('No se encontró la unidad');
-        }
-        return unit;
-    }
-
-    private async getSubCategory(subcategoryId: number): Promise<SubCategory> {
-        const subcategory = await this.subcategoryRepository.findOne({ where: { id: subcategoryId } });
-        if (!subcategory) {
-            throw new NotFoundException('No se encontró la categoría');
-        }
-        return subcategory;
-    }
-
-    async searchUnit(productId: number): Promise<Unit> {
+    async searchUnit(productId: string): Promise<Unit> {
         const unit = await this.dataSource.getRepository(Unit)
             .createQueryBuilder('unit')
             .innerJoin('unit.products', 'product', 'product.id = :id', { id: productId })
@@ -139,11 +109,11 @@ export class ProductService {
         return unit;
     }
 
-    async searchSubCategory(productId: number): Promise<SubCategory> {
+    async searchSubCategory(productId: string): Promise<SubCategory> {
         const subcategory = await this.dataSource.getRepository(SubCategory)
             .createQueryBuilder('subcategory')
             .innerJoin('subcategory.products', 'product')
-            .where('product.id = :id', { id:  productId})
+            .where('product.id = :id', { id: productId })
             .getOne();
         if (!subcategory) {
             throw new NotFoundException('No se encontró la subcategoría');
