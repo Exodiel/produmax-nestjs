@@ -718,14 +718,14 @@
   dependencies:
     uuid "9.0.0"
 
-"@nestjs/websockets@^10.0.4":
-  version "10.0.4"
-  resolved "https://registry.yarnpkg.com/@nestjs/websockets/-/websockets-10.0.4.tgz#1810c4ebcfb1809c585c43e45b4cde50c21d23f5"
-  integrity sha512-pDGUIXS6Xe7oucdx9pSB+FFK7IeHDmyFacptwnuyMtiNyBcyWkqPvAkKF2hPuEerc4wJmEo6u4vVQjIsrD5ctw==
+"@nestjs/websockets@^10.1.2":
+  version "10.1.3"
+  resolved "https://registry.yarnpkg.com/@nestjs/websockets/-/websockets-10.1.3.tgz#2af284422f32839f91f788b1aabb5301113dd280"
+  integrity sha512-6QVjtQgmSfC6klRiNMxbrQFTvm88MOBdA6kP91g3vrpX6fi74khnKf+kGMeQYXBlYCtCCQ2cvEipHc0Gzf46Ag==
   dependencies:
     iterare "1.2.1"
     object-hash "3.0.0"
-    tslib "2.6.0"
+    tslib "2.6.1"
 
 "@nuxtjs/opencollective@0.3.2":
   version "0.3.2"
