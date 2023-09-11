@@ -1,5 +1,7 @@
-import { Controller, Get, Res, Req } from '@nestjs/common';
+import { Controller, Get, Res, Req, Post, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { Response, Request } from 'express';
+import { Unprotected } from 'nest-keycloak-connect';
 import { AppService } from './app.service';
 
 @Controller('app')
@@ -11,5 +13,12 @@ export class AppController {
     return res.json({
       hello,
     });
+  }
+
+  @Post('upload/file')
+  @UseInterceptors(FileInterceptor('file'))
+  @Unprotected()
+  uploadFile(@UploadedFile() file: Express.Multer.File) {
+    return this.appService.uploadFile(file);
   }
 }

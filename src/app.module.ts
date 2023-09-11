@@ -39,7 +39,7 @@ import { JwtMiddleware } from './middlewares/jwt.middlware';
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      url: `postgresql://${process.env.USERNAME}:${process.env.PASSWORD}@${process.env.HOST}:${process.env.PORT}/${process.env.DATABASE}`,
+      url: `postgresql://${process.env.USERNAME}:${process.env.PASSWORD}@${process.env.NODE_ENV === 'development' ? 'localhost' : process.env.HOST}:${process.env.PORT}/${process.env.DATABASE}`,
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
       subscribers: [__dirname + '/**/**/subscriber/*{.ts,.js}']
@@ -63,13 +63,8 @@ import { JwtMiddleware } from './middlewares/jwt.middlware';
     },
   ],
 })
-export class AppModule implements NestModule {
+export class AppModule {
   constructor() {
     console.log('first', process.env.PORT)
-  }
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(JwtMiddleware).forRoutes(
-      { path: 'app/upload', method: RequestMethod.POST },
-    );
   }
 }
