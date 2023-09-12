@@ -641,14 +641,14 @@
     semver "^7.3.5"
     tar "^6.1.11"
 
-"@nestjs/common@^10.0.4":
-  version "10.0.4"
-  resolved "https://registry.yarnpkg.com/@nestjs/common/-/common-10.0.4.tgz#f2875f842a09dde40e03817055b7abb2379f36b6"
-  integrity sha512-p/QG9u5qUAjFlf1DdifPw87KK24hEY3GldignHrM6NgoKzdBXPNA4k8FL0I+HYPqX/hH7pAUEHQCUmjAz5L8bg==
+"@nestjs/common@^10.1.2":
+  version "10.1.3"
+  resolved "https://registry.yarnpkg.com/@nestjs/common/-/common-10.1.3.tgz#7f80d7c011e94bfb2177100cc8862e4fc65a6630"
+  integrity sha512-xSyXBwgcmiFwQqek1Urw/AL3pRPq9bp/tpgfTxmnJg3gP6XNUbx1fDr0de50irXgZYzFKfVFo9ptC3b2du5YKA==
   dependencies:
     uid "2.0.2"
     iterare "1.2.1"
-    tslib "2.6.0"
+    tslib "2.6.1"
 
 "@nestjs/config@^3.0.0":
   version "3.0.0"
@@ -660,17 +660,17 @@
     lodash "4.17.21"
     uuid "9.0.0"
 
-"@nestjs/core@^10.0.4":
-  version "10.0.4"
-  resolved "https://registry.yarnpkg.com/@nestjs/core/-/core-10.0.4.tgz#a3c96bee783b35810fd2ee29218795a83d23194f"
-  integrity sha512-shYB81/FgxtnlXRYcadzmduewkgjxGtIoTZBVzf9SM2FmLiltVGQJvZFkOdweTss19yA/503H62duZ6/Syev4w==
+"@nestjs/core@^10.1.2":
+  version "10.1.3"
+  resolved "https://registry.yarnpkg.com/@nestjs/core/-/core-10.1.3.tgz#6f74ac04695847976dd84836d8063624a793c127"
+  integrity sha512-VzK54TuacC3Vmq3b5xTyMVTlDNJeKbjpKfV9fNqm4TbIBm8ZPo3FC0osJAbAK4XwbVvv2Flq1yA3CutasupVjw==
   dependencies:
     uid "2.0.2"
     "@nuxtjs/opencollective" "0.3.2"
     fast-safe-stringify "2.1.1"
     iterare "1.2.1"
     path-to-regexp "3.2.0"
-    tslib "2.6.0"
+    tslib "2.6.1"
 
 "@nestjs/jwt@^10.1.0":
   version "10.1.0"
